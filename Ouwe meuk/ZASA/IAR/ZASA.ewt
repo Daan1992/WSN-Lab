@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <configuration>
+    <name>CC2480 EndDevice</name>
+    <toolchain>
+      <name>MSP430</name>
+    </toolchain>
+    <debug>1</debug>
+  </configuration>
+  <configuration>
+    <name>CC2480 Router</name>
+    <toolchain>
+      <name>MSP430</name>
+    </toolchain>
+    <debug>1</debug>
+  </configuration>
+  <configuration>
+    <name>CC2480 Coordinator</name>
+    <toolchain>
+      <name>MSP430</name>
+    </toolchain>
+    <debug>1</debug>
+  </configuration>
+  <group>
+    <name>App</name>
+    <file>
+      <name>$PROJ_DIR$\..\Source\ZASA.cfg</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\ZASA.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\ZASA_coord.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\ZASA_enddev.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\ZASA_main.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\ZASA_router.c</name>
+    </file>
+  </group>
+  <group>
+    <name>HAL</name>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\zaccel\cc2480.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\target\cc2480\hal_board.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\target\cc2480\hal_board.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\target\include\hal_defs.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\target\include\hal_types.h</name>
+    </file>
+  </group>
+  <group>
+    <name>MT</name>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\mt\mt.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\mt\mt.h</name>
+    </file>
+  </group>
+  <group>
+    <name>SAPI</name>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\zaccel\sapi.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\zaccel\sapi.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\zaccel\sapi_cb.c</name>
+    </file>
+  </group>
+  <group>
+    <name>ZAccel</name>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\zaccel\spi.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\zaccel\spi.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\zaccel\zaccel.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\common\zaccel\zaccel.h</name>
+    </file>
+  </group>
+</project>
+
+

@@ -1,0 +1,1338 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V6.20.1.931/W32 for MSP430           26/Jun/2015  16:47:47
+# Copyright 1996-2014 IAR Systems AB.
+# Standalone license - IAR Embedded Workbench for Texas Instruments MSP430, 8K KickStart Edition 6.20
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430
+#    Source file   =  
+#        C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\Source\ZASA_enddev.c
+#    Command line  =  
+#        -f "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\Source\ZASA.cfg" (-DZACCEL_BUF_LEN=128
+#        -DHOST_MT_BAUD=9600 -DHOST_MT_RX_OLD=1
+#        "-DHOST_MT_RX_FULL=(ZACCEL_BUF_LEN-1)" -DZACCEL_NV_CHANLIST=0x00008000
+#        -DZACCEL_NV_PANID=0x0DED)
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\Source\ZASA_enddev.c" -D ENDDEVICE -D APP_BLINK_LEDS -lC
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\EndDevice\List\" --remarks --diag_suppress Pe068 -o
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\EndDevice\Obj\" --no_unroll --no_inline --no_tbaa --debug
+#        -D__MSP430F2274__ --warnings_are_errors -e --double=32 --clib -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\Source\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\common\zaccel\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\common\mt\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\target\include\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\target\cc2480\" --reduce_stack_usage -Om
+#        --require_prototypes
+#    List file     =  
+#        C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\EndDevice\List\ZASA_enddev.lst
+#    Object file   =  
+#        C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\EndDevice\Obj\ZASA_enddev.r43
+#
+###############################################################################
+
+C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE M&M\ZASA\Source\ZASA_enddev.c
+      1          /**************************************************************************************************
+      2              Filename:       ZASA_enddev.c
+      3              Revised:        $Date: 2008-04-10 19:47:13 -0700 (Thu, 10 Apr 2008) $
+      4              Revision:       $Revision: 16806 $
+      5          
+      6              Description:
+      7          
+      8              This file contains the main functionality for the End Device of the ZACCEL application.
+      9          
+     10          
+     11              Copyright 2006-2007 Texas Instruments Incorporated. All rights reserved.
+     12          
+     13              IMPORTANT: Your use of this Software is limited to those specific rights
+     14              granted under the terms of a software license agreement between the user
+     15              who downloaded the software, his/her employer (which must be your employer)
+     16              and Texas Instruments Incorporated (the "License").  You may not use this
+     17              Software unless you agree to abide by the terms of the License. The License
+     18              limits your use, and you acknowledge, that the Software may not be modified,
+     19              copied or distributed unless embedded on a Texas Instruments microcontroller
+     20              or used solely and exclusively in conjunction with a Texas Instruments radio
+     21              frequency transceiver, which is integrated into your product.  Other than for
+     22              the foregoing purpose, you may not use, reproduce, copy, prepare derivative
+     23              works of, modify, distribute, perform, display or sell this Software and/or
+     24              its documentation for any purpose.
+     25          
+     26              YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
+     27              PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+     28              INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
+     29              NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
+     30              TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
+     31              NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
+     32              LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES
+     33              INCLUDING BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE
+     34              OR CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT
+     35              OF SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
+     36              (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
+     37          
+     38              Should you have any questions regarding your right to use this Software,
+     39              contact Texas Instruments Incorporated at www.TI.com.
+     40          **************************************************************************************************/
+     41          
+     42          /* ------------------------------------------------------------------------------------------------
+     43           *                                          Includes
+     44           * ------------------------------------------------------------------------------------------------
+     45           */
+     46          
+     47          #include "zaccel.h"
+     48          #include "hal_board.h"
+
+   \                                 In  segment DATA16_AN, at 0x21
+   \   unsigned char volatile P1OUT
+   \                     P1OUT:
+   \   000000                DS8 1
+     49          #include "mt.h"
+     50          #include "ZASA.h"
+     51          #include "sapi.h"
+     52          
+     53          /* ------------------------------------------------------------------------------------------------
+     54           *                                           Global Variables
+     55           * ------------------------------------------------------------------------------------------------
+     56           */
+     57          
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     58          uint8 appFlags = appIdleF;
+   \                     appFlags:
+   \   000000                DS8 1
+     59          
+     60          /* ------------------------------------------------------------------------------------------------
+     61           *                                           Local Variables
+     62           * ------------------------------------------------------------------------------------------------
+     63           */
+     64          
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+     65          static const uint8 srceEP[] = {
+   \                     srceEP:
+   \   000000   01100F030001 DC8 1, 16, 15, 3, 0, 1, 0, 1, 1, 0, 1, 3, 0
+   \            000101000103
+   \            00          
+     66            SRCE_ENDPOINT_ID,
+     67            ZASA_PROFILE_ID_LSB,
+     68            ZASA_PROFILE_ID_MSB,
+     69            SRCE_DEVICE_ID_LSB,
+     70            SRCE_DEVICE_ID_MSB,
+     71            SRCE_DEVICE_VERSION,
+     72            SRCE_LATENCY,
+     73            SRCE_CLUSTER_IN_CNT,
+     74            SRCE_DOOR_ID_LSB,
+     75            SRCE_DOOR_ID_MSB,
+     76            SRCE_CLUSTER_OUT_CNT,
+     77            SRCE_KEY_ID_LSB,
+     78            SRCE_KEY_ID_MSB
+     79          };
+     80          
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     81          static AppState appState;
+   \                     appState:
+   \   000000                DS8 1
+     82          #ifdef APP_DATA_CNF
+     83          static uint8 appMsgRtry;
+     84          #endif
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     85          static uint8 appMsgHandle;
+   \                     appMsgHandle:
+   \   000000                DS8 1
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     86          static uint8 srceKey[SRCE_KEY_SZ];
+   \                     srceKey:
+   \   000000                DS8 1
+     87          
+     88          
+     89          /* ------------------------------------------------------------------------------------------------
+     90           *                                           Local Functions
+     91           * ------------------------------------------------------------------------------------------------
+     92           */
+     93          
+     94          // Triggered by HAL flags.
+     95          static void appExec(void);
+     96          static void appBtnPress(void);
+     97          
+     98          // Helper functions for appExec().
+     99          static void appJoinFail(void);
+    100          
+    101          // Helper functions for appBtnPress().
+    102          static void appStartRequest(void);
+    103          
+    104          // Triggered by ZACCEL flags or ZACCEL response.
+    105          static void appReset(void);
+    106          static void appStart(void);
+    107          #ifdef APP_DATA_CNF
+    108          static void appDataCnf(void);
+    109          #endif
+    110          static void appSrceBind(void);
+    111          static void changeDoorState(void);
+    112          static void appSrceData(void);
+    113          static void appSinkData(void);
+    114          #ifdef APP_BLINK_LEDS
+    115          static void appLedBlink(uint8 led);
+    116          #endif
+    117          
+    118          /**************************************************************************************************
+    119           * @fn          appInit
+    120           *
+    121           * @brief       This function is the host application initialization.
+    122           *
+    123           * input parameters
+    124           *
+    125           * None.
+    126           *
+    127           * output parameters
+    128           *
+    129           * None.
+    130           *
+    131           * @return      None.
+    132           **************************************************************************************************
+    133           */
+
+   \                                 In  segment CODE, align 2
+    134          void appInit(void)
+   \                     appInit:
+    135          {
+    136          #ifdef APP_BLINK_LEDS
+    137            // Setup the LED blink at 1-Hz.
+    138            halTimerSet(HAL_IDX_TIMER_LED, APP_BLINK_INTERVAL, HAL_TIMER_AUTO);
+   \   000000   5E43         MOV.B   #0x1, R14
+   \   000002   1D43         MOV.W   #0x1, R13
+   \   000004   4C43         MOV.B   #0x0, R12
+   \   000006   B012....     CALL    #halTimerSet
+    139          #endif
+    140          
+    141            HAL_ENABLE_INTERRUPTS();
+   \   00000A   32D2         eint
+    142          
+    143            appState = appIniting;
+   \   00000C   C243....     MOV.B   #0x0, &appState
+    144          }
+   \   000010   3041         RET
+    145          
+    146          /**************************************************************************************************
+    147           * @fn          appExecHal
+    148           *
+    149           * @brief       This function is the ZASA executive for HAL events.
+    150           *
+    151           * input parameters
+    152           *
+    153           * None.
+    154           *
+    155           * output parameters
+    156           *
+    157           * None.
+    158           *
+    159           * @return      TRUE if a HAL event was processed; FALSE otherwise.
+    160           **************************************************************************************************
+    161           */
+
+   \                                 In  segment CODE, align 2
+    162          uint16 appExecHal(void)
+   \                     appExecHal:
+    163          {
+   \   000000   0A12         PUSH.W  R10
+    164            uint16 event = HAL_EVT_NONE;
+   \   000002   0A43         MOV.W   #0x0, R10
+    165          
+    166            if (halEventFlags & HAL_EVT_TIMER_LED)
+   \   000004   92B3....     BIT.W   #0x1, &halEventFlags
+   \   000008   0528         JNC     ??appExecHal_0
+    167            {
+    168              event = HAL_EVT_TIMER_LED;
+   \   00000A   1A43         MOV.W   #0x1, R10
+    169          #ifdef APP_BLINK_LEDS
+    170              appLedBlink(APP_STAT_LED);
+   \   00000C   4C43         MOV.B   #0x0, R12
+   \   00000E   B012....     CALL    #appLedBlink
+   \   000012   2E3C         JMP     ??appExecHal_1
+    171          #endif
+    172            }
+    173            else if (halEventFlags & HAL_EVT_TIMER_APP)
+   \                     ??appExecHal_0:
+   \   000014   A2B3....     BIT.W   #0x2, &halEventFlags
+   \   000018   0428         JNC     ??appExecHal_2
+    174            {
+    175              event = HAL_EVT_TIMER_APP;
+   \   00001A   2A43         MOV.W   #0x2, R10
+    176              appExec();
+   \   00001C   B012....     CALL    #appExec
+   \   000020   273C         JMP     ??appExecHal_1
+    177            }
+    178            else if (halEventFlags & HAL_EVT_TIMER_BTN)
+   \                     ??appExecHal_2:
+   \   000022   A2B2....     BIT.W   #0x4, &halEventFlags
+   \   000026   0428         JNC     ??appExecHal_3
+    179            {
+    180              event = HAL_EVT_TIMER_BTN;
+   \   000028   2A42         MOV.W   #0x4, R10
+    181              appBtnPress();
+   \   00002A   B012....     CALL    #appBtnPress
+   \   00002E   203C         JMP     ??appExecHal_1
+    182            }
+    183            else if (halEventFlags & HAL_EVT_BTN_PRESS)
+   \                     ??appExecHal_3:
+   \   000030   B2B00001.... BIT.W   #0x100, &halEventFlags
+   \   000036   1428         JNC     ??appExecHal_4
+    184            {
+    185              event = HAL_EVT_BTN_PRESS;
+   \   000038   3A400001     MOV.W   #0x100, R10
+    186              halTimerSet (HAL_IDX_TIMER_BTN, APP_BTN_INTERVAL, 0);
+   \   00003C   4E43         MOV.B   #0x0, R14
+   \   00003E   2D43         MOV.W   #0x2, R13
+   \   000040   6C43         MOV.B   #0x2, R12
+   \   000042   B012....     CALL    #halTimerSet
+    187          
+    188              // Immediately turn of LEDs when user starts a join process.
+    189              if (appState == appWaiting)
+   \   000046   D293....     CMP.B   #0x1, &appState
+   \   00004A   1220         JNE     ??appExecHal_1
+    190              {
+    191                // Stop the LED blink during joining.
+    192                halTimerSet (HAL_IDX_TIMER_LED, 0, 0);
+   \   00004C   4E43         MOV.B   #0x0, R14
+   \   00004E   0D43         MOV.W   #0x0, R13
+   \   000050   4C43         MOV.B   #0x0, R12
+   \   000052   B012....     CALL    #halTimerSet
+    193                HAL_TURN_OFF_GRN();
+   \   000056   E2C32100     BIC.B   #0x2, &0x21
+    194                HAL_TURN_OFF_RED();
+   \   00005A   D2C32100     BIC.B   #0x1, &0x21
+   \   00005E   083C         JMP     ??appExecHal_1
+    195              }
+    196            }
+    197            else if (halEventFlags & HAL_EVT_ADC)
+   \                     ??appExecHal_4:
+   \   000060   B2B00002.... BIT.W   #0x200, &halEventFlags
+   \   000066   0428         JNC     ??appExecHal_1
+    198            {
+    199              event = HAL_EVT_ADC;
+   \   000068   3A400002     MOV.W   #0x200, R10
+    200              appSrceData();
+   \   00006C   B012....     CALL    #appSrceData
+    201            }
+    202          
+    203            /* Since HAL event flags are set at the interrupt level, they must only be cleared within
+    204             * a critical section.
+    205             */
+    206            if (event != HAL_EVT_NONE)
+   \                     ??appExecHal_1:
+   \   000070   0A93         CMP.W   #0x0, R10
+   \   000072   0A24         JEQ     ??appExecHal_5
+    207            {
+    208              halIntState_t s;
+    209              HAL_ENTER_CRITICAL_SECTION(s);
+   \   000074   0F42         MOV.W   SR, R15
+   \   000076   32C2         dint
+   \   000078   0343         nop
+    210              event = halEventFlags & event;
+   \   00007A   1AF2....     AND.W   &halEventFlags, R10
+    211              halEventFlags ^= event;
+   \   00007E   82EA....     XOR.W   R10, &halEventFlags
+    212              HAL_EXIT_CRITICAL_SECTION(s);
+   \   000082   024F         MOV.W   R15, SR
+    213              return TRUE;
+   \   000084   1C43         MOV.W   #0x1, R12
+   \   000086   013C         JMP     ??appExecHal_6
+    214            }
+    215          
+    216            return FALSE;
+   \                     ??appExecHal_5:
+   \   000088   0C43         MOV.W   #0x0, R12
+   \                     ??appExecHal_6:
+   \   00008A   3A41         POP.W   R10
+   \   00008C   3041         RET
+   \   00008E                REQUIRE P1OUT
+    217          }
+    218          
+    219          /**************************************************************************************************
+    220           * @fn          appExecHost
+    221           *
+    222           * @brief       This function is the ZASA executive for ZACCEL events.
+    223           *
+    224           * input parameters
+    225           *
+    226           * None.
+    227           *
+    228           * output parameters
+    229           *
+    230           * None.
+    231           *
+    232           * @return      TRUE if a ZACCEL event was processed; FALSE otherwise.
+    233           **************************************************************************************************
+    234           */
+
+   \                                 In  segment CODE, align 2
+    235          uint16 appExecHost(void)
+   \                     appExecHost:
+    236          {
+   \   000000   0A12         PUSH.W  R10
+    237            uint16 event = ZACCEL_EVT_NONE;
+   \   000002   0A43         MOV.W   #0x0, R10
+    238          
+    239            zaccelPoll();
+   \   000004   B012....     CALL    #zaccelPoll
+    240          
+    241            if (zaccelEvtFlags & ZACCEL_SYS_RESET_IND)
+   \   000008   8293....     CMP.W   #0x0, &zaccelEvtFlags
+   \   00000C   0534         JGE     ??appExecHost_0
+    242            {
+    243              event = ZACCEL_SYS_RESET_IND;
+   \   00000E   3A400080     MOV.W   #0x8000, R10
+    244              appReset();
+   \   000012   B012....     CALL    #appReset
+   \   000016   273C         JMP     ??appExecHost_1
+    245            }
+    246            else if (zaccelEvtFlags & ZACCEL_START_CNF)
+   \                     ??appExecHost_0:
+   \   000018   92B3....     BIT.W   #0x1, &zaccelEvtFlags
+   \   00001C   0828         JNC     ??appExecHost_2
+    247            {
+    248              event = ZACCEL_START_CNF;
+   \   00001E   1A43         MOV.W   #0x1, R10
+    249              if (appState == appJoining)
+   \   000020   F2900300.... CMP.B   #0x3, &appState
+   \   000026   1F20         JNE     ??appExecHost_1
+    250              {
+    251                appStart();
+   \   000028   B012....     CALL    #appStart
+   \   00002C   1C3C         JMP     ??appExecHost_1
+    252              }
+    253            }
+    254            else if (zaccelEvtFlags & ZACCEL_BIND_CNF)
+   \                     ??appExecHost_2:
+   \   00002E   A2B3....     BIT.W   #0x2, &zaccelEvtFlags
+   \   000032   0D28         JNC     ??appExecHost_3
+    255            {
+    256              event = ZACCEL_BIND_CNF;
+   \   000034   2A43         MOV.W   #0x2, R10
+    257          
+    258              // Setup an auto-repeating timer to send periodic status reports OTA.
+    259              halTimerSet (HAL_IDX_TIMER_APP, APP_REPORT_INTERVAL, HAL_TIMER_AUTO);
+   \   000036   5E43         MOV.B   #0x1, R14
+   \   000038   3D403C00     MOV.W   #0x3c, R13
+   \   00003C   5C43         MOV.B   #0x1, R12
+   \   00003E   B012....     CALL    #halTimerSet
+    260              // But send a report immediately from here to reduce latency of 1st report from a new node.
+    261              appState = appRunning;
+   \   000042   F2400700.... MOV.B   #0x7, &appState
+    262              appSrceData();
+   \   000048   B012....     CALL    #appSrceData
+   \   00004C   0C3C         JMP     ??appExecHost_1
+    263            }
+    264            else if (zaccelEvtFlags & ZACCEL_SEND_DATA_CNF)
+   \                     ??appExecHost_3:
+   \   00004E   B2B2....     BIT.W   #0x8, &zaccelEvtFlags
+   \   000052   0228         JNC     ??appExecHost_4
+    265            {
+    266              event = ZACCEL_SEND_DATA_CNF;
+   \   000054   3A42         MOV.W   #0x8, R10
+   \   000056   073C         JMP     ??appExecHost_1
+    267          #ifdef APP_DATA_CNF
+    268              appDataCnf();
+    269          #endif
+    270            }
+    271            else if (zaccelEvtFlags & ZACCEL_RCV_DATA_IND)
+   \                     ??appExecHost_4:
+   \   000058   C293....     CMP.B   #0x0, &zaccelEvtFlags
+   \   00005C   0434         JGE     ??appExecHost_1
+    272            {
+    273              event = ZACCEL_RCV_DATA_IND;
+   \   00005E   3A408000     MOV.W   #0x80, R10
+    274              // door data received
+    275              appSinkData();
+   \   000062   B012....     CALL    #appSinkData
+    276            }
+    277            if (event != ZACCEL_EVT_NONE)
+   \                     ??appExecHost_1:
+   \   000066   0A93         CMP.W   #0x0, R10
+   \   000068   0624         JEQ     ??appExecHost_5
+    278            {
+    279              event = zaccelEvtFlags & event;
+    280              zaccelEvtFlags ^= event;
+   \   00006A   1AF2....     AND.W   &zaccelEvtFlags, R10
+   \   00006E   82EA....     XOR.W   R10, &zaccelEvtFlags
+    281              return TRUE;
+   \   000072   1C43         MOV.W   #0x1, R12
+   \   000074   013C         JMP     ??appExecHost_6
+    282            }
+    283          
+    284            return FALSE;
+   \                     ??appExecHost_5:
+   \   000076   0C43         MOV.W   #0x0, R12
+   \                     ??appExecHost_6:
+   \   000078   3A41         POP.W   R10
+   \   00007A   3041         RET
+    285          }
+    286          
+
+   \                                 In  segment CODE, align 2
+    287          static void appSinkData(void)
+   \                     appSinkData:
+    288          {
+    289            switch (zaccelDataCmd)
+   \   000000   9293....     CMP.W   #0x1, &zaccelDataCmd
+   \   000004   0B20         JNE     ??appSinkData_0
+    290            {
+    291              case SRCE_DOOR_ID:
+    292                if (zaccelDataLen != SRCE_DOOR_SZ){
+   \   000006   9293....     CMP.W   #0x1, &zaccelDataLen
+   \   00000A   0820         JNE     ??appSinkData_0
+    293                  break;
+    294                }
+    295                if (zaccelDataBuf[SRCE_DOOR_STATE] == 0){ 
+   \   00000C   C293....     CMP.B   #0x0, &zaccelDataBuf
+   \   000010   0320         JNE     ??appSinkData_1
+    296                  HAL_TURN_ON_RED(); // door is open
+   \   000012   D2D32100     BIS.B   #0x1, &0x21
+   \   000016   3041         RET
+    297                }
+    298                else{
+    299                  HAL_TURN_OFF_RED();
+   \                     ??appSinkData_1:
+   \   000018   D2C32100     BIC.B   #0x1, &0x21
+    300                }  
+    301                break;
+    302            }
+    303          }
+   \                     ??appSinkData_0:
+   \   00001C   3041         RET
+   \   00001E                REQUIRE P1OUT
+    304          
+    305          
+    306          /**************************************************************************************************
+    307           * @fn          appExec
+    308           *
+    309           * @brief       This function is the ZASA executive run by a periodic timer event.
+    310           *
+    311           * input parameters
+    312           *
+    313           * None.
+    314           *
+    315           * output parameters
+    316           *
+    317           * None.
+    318           *
+    319           * @return      None.
+    320           **************************************************************************************************
+    321           */
+
+   \                                 In  segment CODE, align 2
+    322          static void appExec(void)
+   \                     appExec:
+    323          {
+    324            switch (appState)
+   \   000000   5E42....     MOV.B   &appState, R14
+   \   000004   4E83         SUB.B   #0x0, R14
+   \   000006   0B24         JEQ     ??appExec_0
+   \   000008   5E83         SUB.B   #0x1, R14
+   \   00000A   0924         JEQ     ??appExec_0
+   \   00000C   6E83         SUB.B   #0x2, R14
+   \   00000E   0C24         JEQ     ??appExec_1
+   \   000010   5E83         SUB.B   #0x1, R14
+   \   000012   0C24         JEQ     ??appExec_2
+   \   000014   5E83         SUB.B   #0x1, R14
+   \   000016   0C24         JEQ     ??appExec_3
+   \   000018   6E83         SUB.B   #0x2, R14
+   \   00001A   1424         JEQ     ??appExec_4
+   \   00001C   3041         RET
+    325            {
+    326              case appIniting:
+    327              case appWaiting:
+    328                // Not expected in this state, so just stop the timer in case it is auto-repeating.
+    329                halTimerSet (HAL_IDX_TIMER_APP, 0, 0);
+   \                     ??appExec_0:
+   \   00001E   4E43         MOV.B   #0x0, R14
+   \   000020   0D43         MOV.W   #0x0, R13
+   \   000022   5C43         MOV.B   #0x1, R12
+   \   000024   3040....     BR      #halTimerSet
+    330                break;
+    331          
+    332              case appJoining:
+    333                appJoinFail();
+   \                     ??appExec_1:
+   \   000028   3040....     BR      #appJoinFail
+    334                break;
+    335          
+    336              case appJoinWaiting:
+    337                appStartRequest();
+   \                     ??appExec_2:
+   \   00002C   3040....     BR      #appStartRequest
+    338                break;
+    339          
+    340              case appBinding:
+    341                halTimerSet (HAL_IDX_TIMER_APP, APP_BIND_WAIT, 0);
+   \                     ??appExec_3:
+   \   000030   4E43         MOV.B   #0x0, R14
+   \   000032   3D401E00     MOV.W   #0x1e, R13
+   \   000036   5C43         MOV.B   #0x1, R12
+   \   000038   B012....     CALL    #halTimerSet
+    342                appState = appBindWaiting;
+   \   00003C   F2400600.... MOV.B   #0x6, &appState
+    343                break;
+   \   000042   3041         RET
+    344          
+    345              case appBindWaiting: 
+    346                break;
+    347           
+    348              case appRunning:
+    349                if (appFlags & appSendingF)
+   \                     ??appExec_4:
+   \   000044   F2B02000.... BIT.B   #0x20, &appFlags
+   \   00004A   022C         JC      ??appExec_5
+    350                {
+    351          #ifdef APP_DATA_CNF
+    352                  appDataCnf();
+    353          #endif
+    354                }
+    355                else
+    356                {
+    357                  appSrceData();
+   \   00004C   B012....     CALL    #appSrceData
+    358                }
+    359                break;
+    360            }
+    361          }
+   \                     ??appExec_5:
+   \   000050   3041         RET
+    362          
+    363          /**************************************************************************************************
+    364           * @fn          appBtnPress
+    365           *
+    366           * @brief       This function acts on a button press.
+    367           *
+    368           * input parameters
+    369           *
+    370           * None.
+    371           *
+    372           * output parameters
+    373           *
+    374           * None.
+    375           *
+    376           * @return      None.
+    377           **************************************************************************************************
+    378           */
+
+   \                                 In  segment CODE, align 2
+    379          static void appBtnPress(void)
+   \                     appBtnPress:
+    380          {
+    381            switch (appState)
+   \   000000   5E42....     MOV.B   &appState, R14
+   \   000004   5E83         SUB.B   #0x1, R14
+   \   000006   0B24         JEQ     ??appBtnPress_0
+   \   000008   6E83         SUB.B   #0x2, R14
+   \   00000A   0B24         JEQ     ??appBtnPress_1
+   \   00000C   5E83         SUB.B   #0x1, R14
+   \   00000E   0924         JEQ     ??appBtnPress_1
+   \   000010   5E83         SUB.B   #0x1, R14
+   \   000012   0724         JEQ     ??appBtnPress_1
+   \   000014   5E83         SUB.B   #0x1, R14
+   \   000016   0524         JEQ     ??appBtnPress_1
+   \   000018   5E83         SUB.B   #0x1, R14
+   \   00001A   0324         JEQ     ??appBtnPress_1
+   \   00001C   3041         RET
+    382            {
+    383              case appIniting:
+    384                // Do not act on a button press in this state which should be only momentary after powerup.
+    385                break;
+    386          
+    387              case appWaiting:
+    388                appStartRequest();
+   \                     ??appBtnPress_0:
+   \   00001E   3040....     BR      #appStartRequest
+    389                break;
+    390          
+    391              case appJoining:
+    392              case appJoinWaiting:
+    393              case appBinding:
+    394              case appBindWaiting:
+    395              case appRunning:
+    396                changeDoorState();
+   \                     ??appBtnPress_1:
+   \   000022   3040....     BR      #changeDoorState
+    397                break;
+    398            }
+    399          }
+    400          
+    401          /**************************************************************************************************
+    402           * @fn          changeDoorState
+    403           *
+    404           * @brief       This function sends the message to change the doorstate to the coordinator.
+    405           *
+    406           * input parameters
+    407           *
+    408           * None.
+    409           *
+    410           * output parameters
+    411           *
+    412           * None.
+    413           *
+    414           * @return      None.
+    415           **************************************************************************************************
+    416           */
+
+   \                                 In  segment CODE, align 2
+    417          static void changeDoorState(void)
+   \                     changeDoorState:
+    418          {
+    419            srceKey[SRCE_KEY_PRESS] = 0x01; // set srcKey on key press
+   \   000000   D243....     MOV.B   #0x1, &srceKey
+    420            #ifdef APP_DATA_CNF
+    421              // Increment the message handle so that the next message is unique.
+    422              zb_SendDataRequest (ZB_BINDING_ADDR, SRCE_KEY_ID, appMsgHandle++,
+    423                                  AF_ACK_REQUEST, AF_DEFAULT_RADIUS, SRCE_KEY_SZ, srceKey);
+    424          
+    425              /* An FFD will always be awake and ready to poll for it.
+    426               */
+    427              appMsgRtry = APP_RETRY_CNT;
+    428              appFlags |= appSendingF;
+    429          #else
+    430                zb_SendDataRequest (ZB_BINDING_ADDR, SRCE_KEY_ID, appMsgHandle++,
+    431                                    0, AF_DEFAULT_RADIUS, SRCE_KEY_SZ, srceKey);
+   \   000004   5E42....     MOV.B   &appMsgHandle, R14
+   \   000008   4F4E         MOV.B   R14, R15
+   \   00000A   5F53         ADD.B   #0x1, R15
+   \   00000C   C24F....     MOV.B   R15, &appMsgHandle
+   \   000010   3012....     PUSH.W  #srceKey
+   \   000014   5312         PUSH.B  #0x1
+   \   000016   70120A00     PUSH.B  #0xa
+   \   00001A   4F43         MOV.B   #0x0, R15
+   \   00001C   3D400300     MOV.W   #0x3, R13
+   \   000020   3C40FEFF     MOV.W   #0xfffe, R12
+   \   000024   B012....     CALL    #zb_SendDataRequest
+   \   000028   31500600     ADD.W   #0x6, SP
+    432          #ifdef APP_BLINK_LEDS
+    433                appLedBlink (APP_DATA_LED);
+   \   00002C   5C43         MOV.B   #0x1, R12
+   \   00002E   3040....     BR      #appLedBlink
+    434          #endif
+    435          #endif
+    436          }
+    437          
+    438          
+    439          /**************************************************************************************************
+    440           * @fn          appJoinFail
+    441           *
+    442           * @brief       This function executes the specified behaviour when a join attempt fails.
+    443           *
+    444           * input parameters
+    445           *
+    446           * None.
+    447           *
+    448           * output parameters
+    449           *
+    450           * None.
+    451           *
+    452           * @return      None.
+    453           **************************************************************************************************
+    454           */
+
+   \                                 In  segment CODE, align 2
+    455          static void appJoinFail(void)
+   \                     appJoinFail:
+    456          {
+   \   000000   2183         SUB.W   #0x2, SP
+    457            /* MT_SAPI_START_CNF can be missed by the race condition between re-registering the Endpoint
+    458             * with the SAPI after the device does a reset to restore/auto-join and the join success.
+    459             * This check catches the situation when a join succeeds before this host can even register
+    460             * the Endpoint.
+    461             */
+    462            zb_GetDeviceInfo (ZB_INFO_DEV_STATE);
+   \   000002   4C43         MOV.B   #0x0, R12
+   \   000004   B012....     CALL    #zb_GetDeviceInfo
+    463            if (ZACCEL_NWK_CONN)
+   \   000008   5E42....     MOV.B   &zaccelNwkState, R14
+   \   00000C   7E900500     CMP.B   #0x5, R14
+   \   000010   0924         JEQ     ??appJoinFail_0
+   \   000012   7E900600     CMP.B   #0x6, R14
+   \   000016   0624         JEQ     ??appJoinFail_0
+   \   000018   7E900700     CMP.B   #0x7, R14
+   \   00001C   0324         JEQ     ??appJoinFail_0
+   \   00001E   7E900900     CMP.B   #0x9, R14
+   \   000022   0320         JNE     ??appJoinFail_1
+    464            {
+    465              appStart();
+   \                     ??appJoinFail_0:
+   \   000024   B012....     CALL    #appStart
+    466              return;
+   \   000028   123C         JMP     ??appJoinFail_2
+    467            }
+    468          
+    469            /* If attempting to join as an RFD/End Device fails, the only way to stop it is to reset ZACCEL.
+    470             * Sleep for APP_JOIN_WAIT time and re-try joining.
+    471             */
+    472            uint8 val = ZCD_STARTOPT_RESTORE_STATE;
+   \                     ??appJoinFail_1:
+   \   00002A   E1430000     MOV.B   #0x2, 0(SP)
+    473            zb_WriteConfiguration (ZCD_NV_STARTUP_OPTION, 1, &val);
+   \   00002E   0E41         MOV.W   SP, R14
+   \   000030   5D43         MOV.B   #0x1, R13
+   \   000032   7C400300     MOV.B   #0x3, R12
+   \   000036   B012....     CALL    #zb_WriteConfiguration
+    474            appState = appJoinWaiting;
+   \   00003A   E242....     MOV.B   #0x4, &appState
+    475            halTimerSet (HAL_IDX_TIMER_APP, APP_JOIN_WAIT, 0);
+   \   00003E   4E43         MOV.B   #0x0, R14
+   \   000040   3D401E00     MOV.W   #0x1e, R13
+   \   000044   5C43         MOV.B   #0x1, R12
+   \   000046   B012....     CALL    #halTimerSet
+    476            zb_SystemReset();
+   \   00004A   B012....     CALL    #zb_SystemReset
+    477          }
+   \                     ??appJoinFail_2:
+   \   00004E   2153         ADD.W   #0x2, SP
+   \   000050   3041         RET
+    478          
+    479          /**************************************************************************************************
+    480           * @fn          appStartRequest
+    481           *
+    482           * @brief       This function acts on a button press.
+    483           *
+    484           * input parameters
+    485           *
+    486           * None.
+    487           *
+    488           * output parameters
+    489           *
+    490           * None.
+    491           *
+    492           * @return      None.
+    493           **************************************************************************************************
+    494           */
+
+   \                                 In  segment CODE, align 2
+    495          static void appStartRequest(void)
+   \                     appStartRequest:
+    496          {
+   \   000000   2183         SUB.W   #0x2, SP
+    497            uint8 tmp = ZG_DEVICETYPE_ENDDEVICE; 
+   \   000002   E1430000     MOV.B   #0x2, 0(SP)
+    498            zb_WriteConfiguration (ZCD_NV_LOGICAL_TYPE, 1, &tmp);
+   \   000006   0E41         MOV.W   SP, R14
+   \   000008   5D43         MOV.B   #0x1, R13
+   \   00000A   7C408700     MOV.B   #0x87, R12
+   \   00000E   B012....     CALL    #zb_WriteConfiguration
+    499            zb_StartRequest();
+   \   000012   B012....     CALL    #zb_StartRequest
+    500            appState = appJoining;
+   \   000016   F2400300.... MOV.B   #0x3, &appState
+    501          
+    502            /* The ZACCEL will try to join indefinitely, so the host is setting a timer in order to take
+    503             * action if the join attempt does not succeed within a reasonable amount of time.
+    504             */
+    505            halTimerSet (HAL_IDX_TIMER_APP, APP_JOIN_TIME, 0);
+   \   00001C   4E43         MOV.B   #0x0, R14
+   \   00001E   3D400600     MOV.W   #0x6, R13
+   \   000022   5C43         MOV.B   #0x1, R12
+   \   000024   B012....     CALL    #halTimerSet
+    506          }
+   \   000028   2153         ADD.W   #0x2, SP
+   \   00002A   3041         RET
+    507          
+    508          /**************************************************************************************************
+    509           * @fn          appReset
+    510           *
+    511           * @brief       This function is the host action on a ZACCEL reset.
+    512           *
+    513           * input parameters
+    514           *
+    515           * None.
+    516           *
+    517           * output parameters
+    518           *
+    519           * None.
+    520           *
+    521           * @return      None.
+    522           **************************************************************************************************
+    523           */
+
+   \                                 In  segment CODE, align 2
+    524          static void appReset(void)
+   \                     appReset:
+    525          {
+   \   000000   3182         SUB.W   #0x8, SP
+    526            // No previously received indication flag can be valid after the ZACCEL resets.
+    527            zaccelIndFlags = ZACCEL_STATUS_CLEAR;
+   \   000002   8243....     MOV.W   #0x0, &zaccelIndFlags
+    528          
+    529            /* No ZigBee Endpoints (not even the Simple Descriptor) are not stored in the ZACCEL NV.
+    530             * Therefore, the host must re-register anytime that the ZACCEL resets.
+    531             */
+    532            zb_SapiAppRegister(srceEP);
+   \   000006   3C40....     MOV.W   #srceEP, R12
+   \   00000A   B012....     CALL    #zb_SapiAppRegister
+    533          
+    534            switch (appState)
+   \   00000E   5E42....     MOV.B   &appState, R14
+   \   000012   4E83         SUB.B   #0x0, R14
+   \   000014   0324         JEQ     ??appReset_0
+   \   000016   5E83         SUB.B   #0x1, R14
+   \   000018   0F24         JEQ     ??appReset_1
+   \   00001A   233C         JMP     ??appReset_2
+    535            {
+    536              case appIniting:
+    537                {
+    538                  // Reset Network NV items.
+    539                  uint8 val = ZCD_STARTOPT_CLEAR_CONFIG;
+   \                     ??appReset_0:
+   \   00001C   D1430200     MOV.B   #0x1, 0x2(SP)
+    540                  zb_WriteConfiguration (ZCD_NV_STARTUP_OPTION, 1, &val);
+   \   000020   0E41         MOV.W   SP, R14
+   \   000022   2E53         ADD.W   #0x2, R14
+   \   000024   5D43         MOV.B   #0x1, R13
+   \   000026   7C400300     MOV.B   #0x3, R12
+   \   00002A   B012....     CALL    #zb_WriteConfiguration
+    541                  zb_SystemReset();
+   \   00002E   B012....     CALL    #zb_SystemReset
+    542          
+    543                  appState = appWaiting;
+   \   000032   D243....     MOV.B   #0x1, &appState
+    544                }
+    545                break;
+   \   000036   153C         JMP     ??appReset_2
+    546          
+    547              case appWaiting:
+    548                // The last step of the appIniting above was to reset the ZACCEL.
+    549                {
+    550                  // Configure the Host Application-specific defaults from ZASA.cfg into the ZACCEL.
+    551                  uint16 val16 = ZACCEL_NV_PANID;
+   \                     ??appReset_1:
+   \   000038   B140ED0D0000 MOV.W   #0xded, 0(SP)
+    552                  zb_WriteConfiguration (ZCD_NV_PANID, 2, &val16);
+   \   00003E   0E41         MOV.W   SP, R14
+   \   000040   6D43         MOV.B   #0x2, R13
+   \   000042   7C408300     MOV.B   #0x83, R12
+   \   000046   B012....     CALL    #zb_WriteConfiguration
+    553                  uint32 val32 = ZACCEL_NV_CHANLIST;
+   \   00004A   B14000800400 MOV.W   #0x8000, 0x4(SP)
+   \   000050   81430600     MOV.W   #0x0, 0x6(SP)
+    554                  zb_WriteConfiguration (ZCD_NV_CHANLIST, 4, &val32);
+   \   000054   0E41         MOV.W   SP, R14
+   \   000056   2E52         ADD.W   #0x4, R14
+   \   000058   6D42         MOV.B   #0x4, R13
+   \   00005A   7C408400     MOV.B   #0x84, R12
+   \   00005E   B012....     CALL    #zb_WriteConfiguration
+    555                }
+    556                break;
+    557          
+    558              case appJoining:
+    559                /* This host application has configured the ZACCEL as a ZigBee device and then reset it so that
+    560                 * the ZACCEL can re-configure its RAM accordingly and start an auto-join process from powerup.
+    561                 * No action other than registering the Endpoint, already done above, is required.
+    562                 * The host will receive a join indication from the ZACCEL or the joining timer will expire.
+    563                 */
+    564              case appJoinWaiting:
+    565                /* This host application has configured the ZACCEL to stop attempting to join so that low power
+    566                 * can be entered while waiting to re-try joining.
+    567                 */
+    568              case appBinding:
+    569              case appBindWaiting:
+    570              case appRunning:
+    571                break;
+    572            }
+    573          }
+   \                     ??appReset_2:
+   \   000062   3152         ADD.W   #0x8, SP
+   \   000064   3041         RET
+    574          
+    575          /**************************************************************************************************
+    576           * @fn          appStart
+    577           *
+    578           * @brief       This function is the host application registration with the ZACCEL SAPI.
+    579           *
+    580           * input parameters
+    581           *
+    582           * None.
+    583           *
+    584           * output parameters
+    585           *
+    586           * None.
+    587           *
+    588           * @return      None.
+    589           **************************************************************************************************
+    590           */
+
+   \                                 In  segment CODE, align 2
+    591          static void appStart(void)
+   \                     appStart:
+    592          {
+   \   000000   2183         SUB.W   #0x2, SP
+    593            uint8 val = ZCD_STARTOPT_AUTO_START;
+   \   000002   E1420000     MOV.B   #0x4, 0(SP)
+    594            zb_WriteConfiguration (ZCD_NV_STARTUP_OPTION, 1, &val);
+   \   000006   0E41         MOV.W   SP, R14
+   \   000008   5D43         MOV.B   #0x1, R13
+   \   00000A   7C400300     MOV.B   #0x3, R12
+   \   00000E   B012....     CALL    #zb_WriteConfiguration
+    595          
+    596            zb_GetDeviceInfo (ZB_INFO_DEV_STATE);
+   \   000012   4C43         MOV.B   #0x0, R12
+   \   000014   B012....     CALL    #zb_GetDeviceInfo
+    597            zb_GetDeviceInfo (ZB_INFO_SHORT_ADDR);
+   \   000018   6C43         MOV.B   #0x2, R12
+   \   00001A   B012....     CALL    #zb_GetDeviceInfo
+    598          
+    599          #ifdef APP_BLINK_LEDS
+    600              halTimerSet (HAL_IDX_TIMER_LED, APP_BLINK_INTERVAL, HAL_TIMER_AUTO);
+   \   00001E   5E43         MOV.B   #0x1, R14
+   \   000020   1D43         MOV.W   #0x1, R13
+   \   000022   4C43         MOV.B   #0x0, R12
+   \   000024   B012....     CALL    #halTimerSet
+    601          #endif
+    602          
+    603            zb_AllowBind (APP_PMT_BIND);
+   \   000028   7C43         MOV.B   #0xff, R12
+   \   00002A   B012....     CALL    #zb_AllowBind
+    604            appSrceBind(); 
+   \   00002E   B012....     CALL    #appSrceBind
+    605          }
+   \   000032   2153         ADD.W   #0x2, SP
+   \   000034   3041         RET
+    606          
+    607          #ifdef APP_DATA_CNF
+    608          /**************************************************************************************************
+    609           * @fn          appDataCnf
+    610           *
+    611           * @brief       This function is the host application action upon receiving a message confirmation.
+    612           *
+    613           * input parameters
+    614           *
+    615           * None.
+    616           *
+    617           * output parameters
+    618           *
+    619           * None.
+    620           *
+    621           * @return      None.
+    622           **************************************************************************************************
+    623           */
+    624          static void appDataCnf(void)
+    625          {
+    626            if (zaccelIndFlags & ZACCEL_SEND_SUCCESS)
+    627            {
+    628              zaccelIndFlags &= ~ZACCEL_SEND_SUCCESS;
+    629              appFlags &= ~appSendingF;
+    630          #ifdef APP_BLINK_LEDS
+    631              appLedBlink(APP_DATA_LED);
+    632          #endif
+    633          
+    634              /* The RFD had to set this timer to the shorter APP_REPORT_RETRY interval to wake from sleep
+    635               * and retry sending the report if there was no confirmation.
+    636               * Now RFD sets timer to wake from sleep to send the next report.
+    637               */
+    638              halTimerSet (HAL_IDX_TIMER_APP, APP_REPORT_INTERVAL, HAL_TIMER_AUTO);
+    639            }
+    640            else if ((appMsgRtry == 0) || (--appMsgRtry == 0))
+    641            {
+    642              appFlags &= ~appSendingF;
+    643              appSrceBind();  
+    644            }
+    645            else
+    646            {            
+    647              zb_SendDataRequest (ZB_BINDING_ADDR, SRCE_KEY_ID, appMsgHandle++,
+    648                                AF_ACK_REQUEST, AF_DEFAULT_RADIUS, SRCE_KEY_SZ, srceKey);
+    649            }
+    650          }
+    651          #endif
+    652          
+    653          /**************************************************************************************************
+    654           * @fn          appSrceBind
+    655           *
+    656           * @brief       This function is the host application to request an Endpoint binding.
+    657           *
+    658           * input parameters
+    659           *
+    660           * None.
+    661           *
+    662           * output parameters
+    663           *
+    664           * None.
+    665           *
+    666           * @return      None.
+    667           **************************************************************************************************
+    668           */
+
+   \                                 In  segment CODE, align 2
+    669          static void appSrceBind(void)
+   \                     appSrceBind:
+    670          {
+   \   000000   3182         SUB.W   #0x8, SP
+    671            /* IEEE address of the device to establish the binding with. Set the destIEEE to NULL
+    672             * in order to bind with any other device that is in the Allow Binding Mode.
+    673             */
+    674            uint8 destIEEE[Z_EXTADDR_LEN] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+   \   000002   0C41         MOV.W   SP, R12
+   \   000004   3E42         MOV.W   #0x8, R14
+   \   000006   B012....     CALL    #?ClearMemoryBytes
+    675            zb_BindDevice (TRUE, SRCE_KEY_ID, destIEEE);
+   \   00000A   0E41         MOV.W   SP, R14
+   \   00000C   3D400300     MOV.W   #0x3, R13
+   \   000010   5C43         MOV.B   #0x1, R12
+   \   000012   B012....     CALL    #zb_BindDevice
+    676            halTimerSet (HAL_IDX_TIMER_APP, APP_BIND_TIME, 0);
+   \   000016   4E43         MOV.B   #0x0, R14
+   \   000018   3D400A00     MOV.W   #0xa, R13
+   \   00001C   5C43         MOV.B   #0x1, R12
+   \   00001E   B012....     CALL    #halTimerSet
+    677            appState = appBinding;
+   \   000022   F2400500.... MOV.B   #0x5, &appState
+    678          }
+   \   000028   3152         ADD.W   #0x8, SP
+   \   00002A   3041         RET
+    679          
+    680          /**************************************************************************************************
+    681           * @fn          appSrceData
+    682           *
+    683           * @brief       This function is the host application to process received data.
+    684           *
+    685           * input parameters
+    686           *
+    687           * None.
+    688           *
+    689           * output parameters
+    690           *
+    691           * None.
+    692           *
+    693           * @return      None.
+    694           **************************************************************************************************
+    695           */
+
+   \                                 In  segment CODE, align 2
+    696          static void appSrceData(void)
+   \                     appSrceData:
+    697          {
+    698              switch (zaccelDataCmd){
+   \   000000   9293....     CMP.W   #0x1, &zaccelDataCmd
+   \   000004   0E20         JNE     ??appSrceData_0
+    699                case SRCE_DOOR_ID:
+    700                  if (zaccelDataLen != SRCE_DOOR_SZ){
+   \   000006   9293....     CMP.W   #0x1, &zaccelDataLen
+   \   00000A   0B20         JNE     ??appSrceData_0
+    701                    break;
+    702                  }
+    703                  if (zaccelDataBuf[SRCE_DOOR_STATE] == 0){
+   \   00000C   C293....     CMP.B   #0x0, &zaccelDataBuf
+   \   000010   0320         JNE     ??appSrceData_1
+    704                    // Door closed, red light off
+    705                    HAL_TURN_OFF_RED();
+   \   000012   D2C32100     BIC.B   #0x1, &0x21
+   \   000016   3041         RET
+    706                  }
+    707                  else if(zaccelDataBuf[SRCE_DOOR_STATE] == 1){
+   \                     ??appSrceData_1:
+   \   000018   D293....     CMP.B   #0x1, &zaccelDataBuf
+   \   00001C   0220         JNE     ??appSrceData_0
+    708                    HAL_TURN_ON_RED();
+   \   00001E   D2D32100     BIS.B   #0x1, &0x21
+    709                  }
+    710                  break;
+    711              }
+    712          }
+   \                     ??appSrceData_0:
+   \   000022   3041         RET
+   \   000024                REQUIRE P1OUT
+    713          
+    714          
+    715          #ifdef APP_BLINK_LEDS
+    716          /**************************************************************************************************
+    717           * @fn          appLedBlink
+    718           *
+    719           * @brief       Blink the LED specified.
+    720           *
+    721           * input parameters
+    722           *
+    723           * @param       led - Which LED to control: Status or Data.
+    724           *
+    725           * output parameters
+    726           *
+    727           * None.
+    728           *
+    729           * @return      None.
+    730           **************************************************************************************************
+    731           */
+
+   \                                 In  segment CODE, align 2
+    732          static void appLedBlink(uint8 led)
+   \                     appLedBlink:
+    733          {
+    734            switch (led)
+   \   000000   4C93         CMP.B   #0x0, R12
+   \   000002   2320         JNE     ??appLedBlink_0
+    735            {
+    736              case APP_STAT_LED:
+    737                if (ZACCEL_NWK_CONN)
+   \   000004   5E42....     MOV.B   &zaccelNwkState, R14
+   \   000008   7E900500     CMP.B   #0x5, R14
+   \   00000C   0924         JEQ     ??appLedBlink_1
+   \   00000E   7E900600     CMP.B   #0x6, R14
+   \   000012   0624         JEQ     ??appLedBlink_1
+   \   000014   7E900700     CMP.B   #0x7, R14
+   \   000018   0324         JEQ     ??appLedBlink_1
+   \   00001A   7E900900     CMP.B   #0x9, R14
+   \   00001E   0920         JNE     ??appLedBlink_2
+    738                {
+    739                  HAL_TURN_ON_GRN();
+   \                     ??appLedBlink_1:
+   \   000020   E2D32100     BIS.B   #0x2, &0x21
+    740                  halDelay (APP_BLINK_ON_TIME, TRUE);
+   \   000024   5D43         MOV.B   #0x1, R13
+   \   000026   5C43         MOV.B   #0x1, R12
+   \   000028   B012....     CALL    #halDelay
+    741                  HAL_TURN_OFF_GRN();
+   \   00002C   E2C32100     BIC.B   #0x2, &0x21
+   \   000030   3041         RET
+    742                }
+    743                else
+    744                {
+    745                  HAL_TURN_ON_GRN();
+   \                     ??appLedBlink_2:
+   \   000032   E2D32100     BIS.B   #0x2, &0x21
+    746                  HAL_TURN_ON_RED();
+   \   000036   D2D32100     BIS.B   #0x1, &0x21
+    747                  halDelay (APP_BLINK_ON_TIME, TRUE);
+   \   00003A   5D43         MOV.B   #0x1, R13
+   \   00003C   5C43         MOV.B   #0x1, R12
+   \   00003E   B012....     CALL    #halDelay
+    748                  HAL_TURN_OFF_GRN();
+   \   000042   E2C32100     BIC.B   #0x2, &0x21
+    749                  HAL_TURN_OFF_RED();
+   \   000046   D2C32100     BIC.B   #0x1, &0x21
+    750                }
+    751                break;
+    752          
+    753              default:
+    754                break;
+    755            }
+    756          }
+   \                     ??appLedBlink_0:
+   \   00004A   3041         RET
+   \   00004C                REQUIRE P1OUT
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \   000000   000000000000 DC8 0, 0, 0, 0, 0, 0, 0, 0
+   \            0000        
+    757          #endif
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      2   appBtnPress
+        2   -> appStartRequest
+        2   -> changeDoorState
+      2   appExec
+        2   -> appJoinFail
+        2   -> appSrceData
+        2   -> appStartRequest
+        2   -> halTimerSet
+      4   appExecHal
+        4   -> appBtnPress
+        4   -> appExec
+        4   -> appLedBlink
+        4   -> appSrceData
+        4   -> halTimerSet
+      4   appExecHost
+        4   -> appReset
+        4   -> appSinkData
+        4   -> appSrceData
+        4   -> appStart
+        4   -> halTimerSet
+        4   -> zaccelPoll
+      2   appInit
+        2   -> halTimerSet
+      4   appJoinFail
+        4   -> appStart
+        4   -> halTimerSet
+        4   -> zb_GetDeviceInfo
+        4   -> zb_SystemReset
+        4   -> zb_WriteConfiguration
+      2   appLedBlink
+        2   -> halDelay
+     10   appReset
+       10   -> zb_SapiAppRegister
+       10   -> zb_SystemReset
+       10   -> zb_WriteConfiguration
+      2   appSinkData
+     10   appSrceBind
+       10   -> halTimerSet
+       10   -> zb_BindDevice
+      2   appSrceData
+      4   appStart
+        4   -> appSrceBind
+        4   -> halTimerSet
+        4   -> zb_AllowBind
+        4   -> zb_GetDeviceInfo
+        4   -> zb_WriteConfiguration
+      4   appStartRequest
+        4   -> halTimerSet
+        4   -> zb_StartRequest
+        4   -> zb_WriteConfiguration
+      8   changeDoorState
+        2   -> appLedBlink
+        8   -> zb_SendDataRequest
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       8  ?<Constant {0, 0, 0, 0, 0, 0, 0, 0}>
+       1  P1OUT
+      38  appBtnPress
+      82  appExec
+     142  appExecHal
+     124  appExecHost
+       1  appFlags
+      18  appInit
+      82  appJoinFail
+      76  appLedBlink
+       1  appMsgHandle
+     102  appReset
+      30  appSinkData
+      44  appSrceBind
+      36  appSrceData
+      54  appStart
+      44  appStartRequest
+       1  appState
+      50  changeDoorState
+      13  srceEP
+       1  srceKey
+
+ 
+ 922 bytes in segment CODE
+   1 byte  in segment DATA16_AN
+  21 bytes in segment DATA16_C
+   4 bytes in segment DATA16_Z
+ 
+ 922 bytes of CODE  memory
+  21 bytes of CONST memory
+   4 bytes of DATA  memory (+ 1 byte shared)
+
+Errors: none
+Warnings: none

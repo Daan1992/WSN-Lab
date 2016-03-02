@@ -1,0 +1,769 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V6.20.1.931/W32 for MSP430           16/Feb/2015  12:43:49
+# Copyright 1996-2014 IAR Systems AB.
+# Standalone license - IAR Embedded Workbench for Texas Instruments MSP430, 8K KickStart Edition 6.20
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430
+#    Source file   =  D:\programmas wtws\eZ430-RF2480\common\zaccel\sapi.c
+#    Command line  =  
+#        -f "D:\programmas wtws\eZ430-RF2480\ZASA\IAR\..\Source\ZASA.cfg"
+#        (-DZACCEL_BUF_LEN=128 -DHOST_MT_BAUD=9600 -DHOST_MT_RX_OLD=1
+#        "-DHOST_MT_RX_FULL=(ZACCEL_BUF_LEN-1)" -DZACCEL_NV_CHANLIST=0x00010000
+#        -DZACCEL_NV_PANID=0xFFFF) "D:\programmas
+#        wtws\eZ430-RF2480\common\zaccel\sapi.c" -D ENDDEVICE -D APP_BLINK_LEDS
+#        -lC "D:\programmas wtws\eZ430-RF2480\ZASA\IAR\EndDevice\List\"
+#        --remarks --diag_suppress Pe068 -o "D:\programmas
+#        wtws\eZ430-RF2480\ZASA\IAR\EndDevice\Obj\" --no_unroll --no_inline
+#        --no_tbaa --debug -D__MSP430F2274__ --warnings_are_errors -e
+#        --double=32 --clib -I "D:\programmas wtws\eZ430-RF2480\ZASA\IAR\" -I
+#        "D:\programmas wtws\eZ430-RF2480\ZASA\IAR\..\Source\" -I
+#        "D:\programmas wtws\eZ430-RF2480\ZASA\IAR\..\..\common\zaccel\" -I
+#        "D:\programmas wtws\eZ430-RF2480\ZASA\IAR\..\..\common\mt\" -I
+#        "D:\programmas wtws\eZ430-RF2480\ZASA\IAR\..\..\target\include\" -I
+#        "D:\programmas wtws\eZ430-RF2480\ZASA\IAR\..\..\target\cc2480\"
+#        --reduce_stack_usage -Om --require_prototypes
+#    List file     =  
+#        D:\programmas wtws\eZ430-RF2480\ZASA\IAR\EndDevice\List\sapi.lst
+#    Object file   =  
+#        D:\programmas wtws\eZ430-RF2480\ZASA\IAR\EndDevice\Obj\sapi.r43
+#
+###############################################################################
+
+D:\programmas wtws\eZ430-RF2480\common\zaccel\sapi.c
+      1          /**************************************************************************************************
+      2              Filename:       sapi.c
+      3              Revised:        $Date: 2008-02-21 06:14:24 -0800 (Thu, 21 Feb 2008) $
+      4              Revision:       $Revision: 16454 $
+      5          
+      6              Description:
+      7          
+      8              This file contains the main functionality of the Host interface to the Z-Accel SAPI control.
+      9          
+     10              Copyright 2006-2007 Texas Instruments Incorporated. All rights reserved.
+     11          
+     12              IMPORTANT: Your use of this Software is limited to those specific rights
+     13              granted under the terms of a software license agreement between the user
+     14              who downloaded the software, his/her employer (which must be your employer)
+     15              and Texas Instruments Incorporated (the "License").  You may not use this
+     16              Software unless you agree to abide by the terms of the License. The License
+     17              limits your use, and you acknowledge, that the Software may not be modified,
+     18              copied or distributed unless embedded on a Texas Instruments microcontroller
+     19              or used solely and exclusively in conjunction with a Texas Instruments radio
+     20              frequency transceiver, which is integrated into your product.  Other than for
+     21              the foregoing purpose, you may not use, reproduce, copy, prepare derivative
+     22              works of, modify, distribute, perform, display or sell this Software and/or
+     23              its documentation for any purpose.
+     24          
+     25              YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
+     26              PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+     27              INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE, 
+     28              NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
+     29              TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
+     30              NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
+     31              LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES
+     32              INCLUDING BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE
+     33              OR CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT
+     34              OF SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
+     35              (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
+     36          
+     37              Should you have any questions regarding your right to use this Software,
+     38              contact Texas Instruments Incorporated at www.TI.com.
+     39          **************************************************************************************************/
+     40          
+     41          /* ------------------------------------------------------------------------------------------------
+     42           *                                          Includes
+     43           * ------------------------------------------------------------------------------------------------
+     44           */
+     45          
+     46          #include <string.h>
+     47          #include "zaccel.h"
+     48          #include "sapi.h"
+     49          
+     50          /* ------------------------------------------------------------------------------------------------
+     51           *                                           Macros
+     52           * ------------------------------------------------------------------------------------------------
+     53           */
+     54          
+     55          /* ------------------------------------------------------------------------------------------------
+     56           *                                           Constants
+     57           * ------------------------------------------------------------------------------------------------
+     58           */
+     59          
+     60          /* ------------------------------------------------------------------------------------------------
+     61           *                                           Local Variables
+     62           * ------------------------------------------------------------------------------------------------
+     63           */
+     64          
+     65          /* ------------------------------------------------------------------------------------------------
+     66           *                                           Global Variables
+     67           * ------------------------------------------------------------------------------------------------
+     68           */
+     69          
+     70          /* ------------------------------------------------------------------------------------------------
+     71           *                                           Local Functions
+     72           * ------------------------------------------------------------------------------------------------
+     73           */
+     74          
+     75          static void sapiReq(uint8 cmd, uint8 arg, uint8 *req, uint8 len);
+     76          
+     77          /**************************************************************************************************
+     78           * @fn          zb_SapiAppRegister
+     79           *
+     80           * @brief       This function packs and sends an RPC SAPI endpoint registration.
+     81           *
+     82           *              Modified by MW to handle more than one cluster.
+     83           *
+     84           * input parameters
+     85           *
+     86           * @param       ep - The buffer containing the EndPoint payload.
+     87           *
+     88           * output parameters
+     89           *
+     90           * None.
+     91           *
+     92           * @return      None.
+     93           **************************************************************************************************
+     94           */
+
+   \                                 In  segment CODE, align 2
+     95          void zb_SapiAppRegister(const uint8 *ep)
+   \                     zb_SapiAppRegister:
+     96          {
+     97            uint8 *pBuf = zaccelMsgBuf;
+     98          
+     99            // Determine the size of the endpoint data. Index 7 contains the number of input clusters.
+    100            uint8 size = 2 * ep[7];   // Get the size of input cluster list (cluster id's are 2 bytes big)
+   \   000000   5E4C0700     MOV.B   0x7(R12), R14
+   \   000004   4E5E         RLA.B   R14
+    101            size += 2 * ep[8 + size]; // Add the size of output cluster list
+    102            size += 9;                // Add the size of an endpoint with empty cluster lists
+   \   000006   0F4C         MOV.W   R12, R15
+   \   000008   0F5E         ADD.W   R14, R15
+   \   00000A   5F4F0800     MOV.B   0x8(R15), R15
+   \   00000E   4F5F         RLA.B   R15
+   \   000010   7F500900     ADD.B   #0x9, R15
+   \   000014   4E5F         ADD.B   R15, R14
+    103          
+    104            *(pBuf+MT_RPC_POS_LEN) = size;
+   \   000016   C24E....     MOV.B   R14, &zaccelMsgBuf
+    105            *(pBuf+MT_RPC_POS_CMD0) = MT_RPC_SYS_SAPI | (uint8)(MT_RPC_CMD_SREQ);
+   \   00001A   F2402600.... MOV.B   #0x26, &zaccelMsgBuf + 1
+    106            *(pBuf+MT_RPC_POS_CMD1) = MT_SAPI_APP_REGISTER_REQ;
+   \   000020   F2400A00.... MOV.B   #0xa, &zaccelMsgBuf + 2
+    107            memcpy((pBuf+MT_RPC_POS_DAT0), ep, size);
+   \   000026   0D4C         MOV.W   R12, R13
+   \   000028   3C40....     MOV.W   #zaccelMsgBuf + 3, R12
+   \   00002C   B012....     CALL    #memcpy
+    108          
+    109            zaccelRPC(pBuf);
+   \   000030   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   000034   3040....     BR      #zaccelRPC
+    110          }
+    111          
+    112          /**************************************************************************************************
+    113           * @fn          zb_SystemReset
+    114           *
+    115           * @brief       The zb_SystemReset function reboots the ZigBee device. The zb_SystemReset function
+    116           *              can be called after a call to zb_WriteConfiguration to restart Z-Stack with the 
+    117           *              updated configuration.
+    118           *
+    119           * input parameters
+    120           *
+    121           * None.
+    122           *
+    123           * output parameters
+    124           *
+    125           * None.
+    126           *
+    127           * @return      None.
+    128           **************************************************************************************************
+    129           */
+
+   \                                 In  segment CODE, align 2
+    130          void zb_SystemReset(void)
+   \                     zb_SystemReset:
+    131          {
+    132            
+    133            sapiReq(MT_SAPI_SYS_RESET, 0, NULL, 0);
+   \   000000   4F43         MOV.B   #0x0, R15
+   \   000002   0E43         MOV.W   #0x0, R14
+   \   000004   4D43         MOV.B   #0x0, R13
+   \   000006   7C400900     MOV.B   #0x9, R12
+   \   00000A   3040....     BR      #sapiReq
+    134          }
+    135          
+    136          /**************************************************************************************************
+    137           * @fn          zb_StartRequest
+    138           *
+    139           * @brief       The zb_StartRequest function starts the ZigBee stack.  When the
+    140           *              ZigBee stack starts, the device reads configuration parameters
+    141           *              from Nonvolatile memory and the device joins its network.  The
+    142           *              ZigBee stack calls the zb_StartConfirm callback function when
+    143           *              the startup process completes.
+    144           *
+    145           * input parameters
+    146           *
+    147           * None.
+    148           *
+    149           * output parameters
+    150           *
+    151           * None.
+    152           *
+    153           * @return      None.
+    154           **************************************************************************************************
+    155           */
+
+   \                                 In  segment CODE, align 2
+    156          void zb_StartRequest(void)
+   \                     zb_StartRequest:
+    157          {
+   \   000000   2183         SUB.W   #0x2, SP
+    158            uint8 val = (ZCD_STARTOPT_RESTORE_STATE | ZCD_STARTOPT_AUTO_START);
+   \   000002   F14006000000 MOV.B   #0x6, 0(SP)
+    159            zb_WriteConfiguration(ZCD_NV_STARTUP_OPTION, 1, &val);
+   \   000008   0E41         MOV.W   SP, R14
+   \   00000A   5D43         MOV.B   #0x1, R13
+   \   00000C   7C400300     MOV.B   #0x3, R12
+   \   000010   B012....     CALL    #zb_WriteConfiguration
+    160            zb_SystemReset();
+   \   000014   B012....     CALL    #zb_SystemReset
+    161          }
+   \   000018   2153         ADD.W   #0x2, SP
+   \   00001A   3041         RET
+    162          
+    163          /**************************************************************************************************
+    164           * @fn          zb_PermitJoiningRequest
+    165           *
+    166           * @brief       The zb_PermitJoiningRequest function is used to control the joining permissions and
+    167           *              thus allow or disallow new devices from joining the network.
+    168           *
+    169           * input parameters
+    170           *
+    171           * @param       destination - The destination parameter indicates the address of the device for
+    172           *                            which the joining permissions should be set. This is usually the 
+    173           *                            local device address or the special broadcast address that denotes
+    174           *                            all routers and coordinator ( 0xFFFC ). This way the joining 
+    175           *                            permissions of a single device or the whole network can be controlled.
+    176           * @param       timeout -  Indicates the amount of time in seconds for which the joining permissions
+    177           *                         should be turned on.  If timeout is set to 0x00, the device will turn off
+    178           *                         the joining permissions indefinitely. If it is set to 0xFF,
+    179           *                         the joining permissions will be turned on indefinitely.
+    180           *
+    181           * output parameters
+    182           *
+    183           * None.
+    184           *
+    185           * @return      None.
+    186           **************************************************************************************************
+    187           */
+
+   \                                 In  segment CODE, align 2
+    188          void zb_PermitJoiningRequest(uint16 destination, uint8 timeout)
+   \                     zb_PermitJoiningRequest:
+    189          {
+    190            uint8 *pBuf = zaccelMsgBuf;
+    191          
+    192            *(pBuf+MT_RPC_POS_LEN) = 3;
+   \   000000   F2400300.... MOV.B   #0x3, &zaccelMsgBuf
+    193            *(pBuf+MT_RPC_POS_CMD0) = MT_RPC_SYS_SAPI | (uint8)(MT_RPC_CMD_SREQ);
+   \   000006   F2402600.... MOV.B   #0x26, &zaccelMsgBuf + 1
+    194            *(pBuf+MT_RPC_POS_CMD1) = MT_SAPI_PMT_JOIN_REQ;
+   \   00000C   F242....     MOV.B   #0x8, &zaccelMsgBuf + 2
+    195            *(pBuf+MT_RPC_POS_DAT0) = (uint8)destination;
+   \   000010   C24C....     MOV.B   R12, &zaccelMsgBuf + 3
+    196            *(pBuf+MT_RPC_POS_DAT0+1) = (uint8)(destination >> 8);
+   \   000014   8C10         SWPB    R12
+   \   000016   C24C....     MOV.B   R12, &zaccelMsgBuf + 4
+    197            *(pBuf+MT_RPC_POS_DAT0+2) = timeout;
+   \   00001A   C24D....     MOV.B   R13, &zaccelMsgBuf + 5
+    198          
+    199            zaccelRPC(pBuf);
+   \   00001E   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   000022   3040....     BR      #zaccelRPC
+    200          }
+    201          
+    202          /**************************************************************************************************
+    203           * @fn          zb_BindDevice
+    204           *
+    205           * @brief       The zb_BindDevice function establishes or removes a ‘binding’
+    206           *              between two devices.  Once bound, an application can send
+    207           *              messages to a device by referencing the commandId for the
+    208           *              binding.
+    209           *
+    210           * input parameters
+    211           *
+    212           * @param       create - TRUE to create a binding, FALSE to remove a binding
+    213           * @param       commandId - The identifier of the binding
+    214           * @param       pDestination - The 64-bit IEEE address of the device to bind to
+    215           *
+    216           * output parameters
+    217           *
+    218           * @return      None. The status of the bind operation is returned in the zb_BindConfirm callback.
+    219           **************************************************************************************************
+    220           */
+
+   \                                 In  segment CODE, align 2
+    221          void zb_BindDevice(uint8 create, uint16 commandId, uint8 *pDestination)
+   \                     zb_BindDevice:
+    222          {
+   \   000000   0F4E         MOV.W   R14, R15
+    223            uint8 *pBuf = zaccelMsgBuf;
+    224          
+    225            *(pBuf+MT_RPC_POS_LEN) = 11;
+   \   000002   F2400B00.... MOV.B   #0xb, &zaccelMsgBuf
+    226            *(pBuf+MT_RPC_POS_CMD0) = MT_RPC_SYS_SAPI | (uint8)(MT_RPC_CMD_SREQ);
+   \   000008   F2402600.... MOV.B   #0x26, &zaccelMsgBuf + 1
+    227            *(pBuf+MT_RPC_POS_CMD1) = MT_SAPI_BIND_DEVICE_REQ;
+   \   00000E   D243....     MOV.B   #0x1, &zaccelMsgBuf + 2
+    228            *(pBuf+MT_RPC_POS_DAT0) = create;
+   \   000012   C24C....     MOV.B   R12, &zaccelMsgBuf + 3
+    229            *(pBuf+MT_RPC_POS_DAT0+1) = (uint8)commandId;
+   \   000016   C24D....     MOV.B   R13, &zaccelMsgBuf + 4
+    230            *(pBuf+MT_RPC_POS_DAT0+2) = (uint8)(commandId >> 8);
+   \   00001A   8D10         SWPB    R13
+   \   00001C   C24D....     MOV.B   R13, &zaccelMsgBuf + 5
+    231            memcpy((pBuf+MT_RPC_POS_DAT0+3), pDestination, 8);
+   \   000020   3E42         MOV.W   #0x8, R14
+   \   000022   0D4F         MOV.W   R15, R13
+   \   000024   3C40....     MOV.W   #zaccelMsgBuf + 6, R12
+   \   000028   B012....     CALL    #memcpy
+    232          
+    233            zaccelRPC(pBuf);
+   \   00002C   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   000030   3040....     BR      #zaccelRPC
+    234          }
+    235          
+    236          /**************************************************************************************************
+    237           * @fn          zb_AllowBind
+    238           *
+    239           * @brief       The zb_AllowBind function puts the device into the Allow Binding Mode for a given 
+    240           *              period of time. A peer device can establish a binding to a device in the
+    241           *              Allow Binding Mode by calling zb_BindDevice with a destination address of NULL.
+    242           *
+    243           * input parameters
+    244           *
+    245           * @param       timeout - The number of seconds to remain in the allow binding mode.
+    246           *                        Valid values range from 1 through 65.
+    247           *                        If 0, the Allow Bind mode will be set false without TO.
+    248           *                        If greater than 64, the Allow Bind mode will be true.
+    249           *
+    250           * output parameters
+    251           *
+    252           * @return      None. The status of the bind operation is returned in the zb_BindConfirm callback.
+    253           **************************************************************************************************
+    254           */
+
+   \                                 In  segment CODE, align 2
+    255          void zb_AllowBind(uint8 timeout)
+   \                     zb_AllowBind:
+    256          {
+    257            uint8 *pBuf = zaccelMsgBuf;
+    258          
+    259            *(pBuf+MT_RPC_POS_LEN) = 1;
+   \   000000   D243....     MOV.B   #0x1, &zaccelMsgBuf
+    260            *(pBuf+MT_RPC_POS_CMD0) = MT_RPC_SYS_SAPI | (uint8)(MT_RPC_CMD_SREQ);
+   \   000004   F2402600.... MOV.B   #0x26, &zaccelMsgBuf + 1
+    261            *(pBuf+MT_RPC_POS_CMD1) = MT_SAPI_ALLOW_BIND_REQ;
+   \   00000A   E243....     MOV.B   #0x2, &zaccelMsgBuf + 2
+    262            *(pBuf+MT_RPC_POS_DAT0) = timeout;
+   \   00000E   C24C....     MOV.B   R12, &zaccelMsgBuf + 3
+    263          
+    264            zaccelRPC(pBuf);
+   \   000012   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   000016   3040....     BR      #zaccelRPC
+    265          }
+    266          
+    267          /******************************************************************************
+    268           * @fn          zb_SendDataRequest
+    269           *
+    270           * @brief       The zb_SendDataRequest function initiates transmission of data to a peer device.
+    271           *
+    272           * @param       destination - The destination of the data.  The destination must be one of these:
+    273           *                            - 16-Bit short address of device [0-0xfffD]
+    274           *                            - ZB_BROADCAST_ADDR sends the data to all devices in the network.
+    275           *                            - ZB_BINDING_ADDR sends the data to a previously bound device.
+    276           *
+    277           * @param       commandId - The command ID to send with the message.  If the ZB_BINDING_ADDR
+    278           *                          destination is used, this parameter also indicates the binding to use.
+    279           * @param       handle - A handle used to identify the send data request.
+    280           * @param       txOptions - TRUE if requesting acknowledgement from the destination.
+    281           * @param       radius - The max number of hops the packet can travel through before it is dropped.
+    282           * @param       len - The size of the pData buffer in bytes
+    283           * @param       pData - Pointer to the data buffer containing bytes to send.
+    284           *
+    285           * output parameters
+    286           *
+    287           * None.
+    288           *
+    289           * @return      None.
+    290           **************************************************************************************************
+    291           */
+
+   \                                 In  segment CODE, align 2
+    292          void zb_SendDataRequest(uint16 destination, uint16 commandId, uint8 handle,
+   \                     zb_SendDataRequest:
+    293                                   uint8 txOptions, uint8 radius, uint8 len, uint8 *pData)
+    294          {
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0B12         PUSH.W  R11
+   \   000004   0A4C         MOV.W   R12, R10
+   \   000006   5C410800     MOV.B   0x8(SP), R12
+    295            uint8 *pBuf = zaccelMsgBuf;
+    296          
+    297            *(pBuf+MT_RPC_POS_LEN) = 8 + len;
+   \   00000A   4B4C         MOV.B   R12, R11
+   \   00000C   7B52         ADD.B   #0x8, R11
+   \   00000E   C24B....     MOV.B   R11, &zaccelMsgBuf
+    298            *(pBuf+MT_RPC_POS_CMD0) = MT_RPC_SYS_SAPI | (uint8)(MT_RPC_CMD_SREQ);
+   \   000012   F2402600.... MOV.B   #0x26, &zaccelMsgBuf + 1
+    299            *(pBuf+MT_RPC_POS_CMD1) = MT_SAPI_SEND_DATA_REQ;
+   \   000018   F2400300.... MOV.B   #0x3, &zaccelMsgBuf + 2
+    300            *(pBuf+MT_RPC_POS_DAT0) = (uint8)destination;
+   \   00001E   C24A....     MOV.B   R10, &zaccelMsgBuf + 3
+    301            *(pBuf+MT_RPC_POS_DAT0+1) = (uint8)(destination >> 8);
+   \   000022   8A10         SWPB    R10
+   \   000024   C24A....     MOV.B   R10, &zaccelMsgBuf + 4
+    302            *(pBuf+MT_RPC_POS_DAT0+2) = (uint8)commandId;
+   \   000028   C24D....     MOV.B   R13, &zaccelMsgBuf + 5
+    303            *(pBuf+MT_RPC_POS_DAT0+3) = (uint8)(commandId >> 8);
+   \   00002C   8D10         SWPB    R13
+   \   00002E   C24D....     MOV.B   R13, &zaccelMsgBuf + 6
+    304            *(pBuf+MT_RPC_POS_DAT0+4) = handle;
+   \   000032   C24E....     MOV.B   R14, &zaccelMsgBuf + 7
+    305            *(pBuf+MT_RPC_POS_DAT0+5) = txOptions;
+   \   000036   C24F....     MOV.B   R15, &zaccelMsgBuf + 8
+    306            *(pBuf+MT_RPC_POS_DAT0+6) = radius;
+   \   00003A   D2410600.... MOV.B   0x6(SP), &zaccelMsgBuf + 9
+    307            *(pBuf+MT_RPC_POS_DAT0+7) = len;
+   \   000040   C24C....     MOV.B   R12, &zaccelMsgBuf + 10
+   \   000044   1D410A00     MOV.W   0xa(SP), R13
+    308            if (pData)
+   \   000048   0D93         CMP.W   #0x0, R13
+   \   00004A   0524         JEQ     ??zb_SendDataRequest_0
+    309            {
+    310              memcpy((pBuf+MT_RPC_POS_DAT0+8), pData, len);
+   \   00004C   4E4C         MOV.B   R12, R14
+   \   00004E   3C40....     MOV.W   #zaccelMsgBuf + 11, R12
+   \   000052   B012....     CALL    #memcpy
+    311            }
+    312          
+    313            zaccelRPC(pBuf);
+   \                     ??zb_SendDataRequest_0:
+   \   000056   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   00005A   B012....     CALL    #zaccelRPC
+    314          }
+   \   00005E   3B41         POP.W   R11
+   \   000060   3A41         POP.W   R10
+   \   000062   3041         RET
+    315          
+    316          /**************************************************************************************************
+    317           * @fn          zb_ReadConfiguration
+    318           *
+    319           * @brief       The zb_ReadConfiguration function is used to read a
+    320           *              Configuration Protperty from Nonvolatile memory.
+    321           *
+    322           * input parameters
+    323           *
+    324           * @param       configId - The identifier for the configuration property
+    325           *
+    326           * output parameters
+    327           *
+    328           * None.
+    329           *
+    330           * @return      None.
+    331           **************************************************************************************************
+    332           */
+
+   \                                 In  segment CODE, align 2
+    333          void zb_ReadConfiguration(uint8 configId)
+   \                     zb_ReadConfiguration:
+    334          {
+    335            uint8 *pBuf = zaccelMsgBuf;
+    336          
+    337            *(pBuf+MT_RPC_POS_LEN) = 1;
+   \   000000   D243....     MOV.B   #0x1, &zaccelMsgBuf
+    338            *(pBuf+MT_RPC_POS_CMD0) = MT_RPC_SYS_SAPI | (uint8)(MT_RPC_CMD_SREQ);
+   \   000004   F2402600.... MOV.B   #0x26, &zaccelMsgBuf + 1
+    339            *(pBuf+MT_RPC_POS_CMD1) = MT_SAPI_READ_CFG_REQ;
+   \   00000A   E242....     MOV.B   #0x4, &zaccelMsgBuf + 2
+    340            *(pBuf+MT_RPC_POS_DAT0) = configId;
+   \   00000E   C24C....     MOV.B   R12, &zaccelMsgBuf + 3
+    341          
+    342            zaccelRPC(pBuf);
+   \   000012   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   000016   3040....     BR      #zaccelRPC
+    343          }
+    344          
+    345          /**************************************************************************************************
+    346           * @fn          zb_WriteConfiguration
+    347           *
+    348           * @brief       The zb_ReadConfiguration function is used to write a
+    349           *              Configuration Protperty from Nonvolatile memory.
+    350           *
+    351           * input parameters
+    352           *
+    353           * @param       configId - The identifier for the configuration property
+    354           * @param       len - The size of the pValue buffer in bytes
+    355           * @param       pValue - A buffer containing the new value of the
+    356           *
+    357           * output parameters
+    358           *
+    359           * None.
+    360           *
+    361           * @return      None.
+    362           **************************************************************************************************
+    363           */
+
+   \                                 In  segment CODE, align 2
+    364          void zb_WriteConfiguration(uint8 configId, uint8 len, void *pValue)
+   \                     zb_WriteConfiguration:
+    365          {
+   \   000000   0F4E         MOV.W   R14, R15
+    366            uint8 *pBuf = zaccelMsgBuf;
+    367          
+    368            *(pBuf+MT_RPC_POS_LEN) = 2 + len;
+   \   000002   4E4D         MOV.B   R13, R14
+   \   000004   6E53         ADD.B   #0x2, R14
+   \   000006   C24E....     MOV.B   R14, &zaccelMsgBuf
+    369            *(pBuf+MT_RPC_POS_CMD0) = MT_RPC_SYS_SAPI | (uint8)(MT_RPC_CMD_SREQ);
+   \   00000A   F2402600.... MOV.B   #0x26, &zaccelMsgBuf + 1
+    370            *(pBuf+MT_RPC_POS_CMD1) = MT_SAPI_WRITE_CFG_REQ;
+   \   000010   F2400500.... MOV.B   #0x5, &zaccelMsgBuf + 2
+    371            *(pBuf+MT_RPC_POS_DAT0) = configId;
+   \   000016   C24C....     MOV.B   R12, &zaccelMsgBuf + 3
+    372            *(pBuf+MT_RPC_POS_DAT0+1) = len;
+   \   00001A   C24D....     MOV.B   R13, &zaccelMsgBuf + 4
+    373            memcpy((pBuf+MT_RPC_POS_DAT0+2), pValue, len);
+   \   00001E   4E4D         MOV.B   R13, R14
+   \   000020   0D4F         MOV.W   R15, R13
+   \   000022   3C40....     MOV.W   #zaccelMsgBuf + 5, R12
+   \   000026   B012....     CALL    #memcpy
+    374          
+    375            zaccelRPC(pBuf);
+   \   00002A   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   00002E   3040....     BR      #zaccelRPC
+    376          }
+    377          
+    378          /**************************************************************************************************
+    379           * @fn          zb_FindDeviceRequest
+    380           *
+    381           * @brief       The zb_FindDeviceRequest function is used to determine the
+    382           *              short address for a device in the network.  The device initiating
+    383           *              a call to zb_FindDeviceRequest and the device being discovered
+    384           *              must both be a member of the same network.  When the search is
+    385           *              complete, the zv_FindDeviceConfirm callback function is called.
+    386           *
+    387           * input parameters
+    388           *
+    389           * @param       searchType - The type of search to perform. Can be one of following:
+    390           *                           ZB_IEEE_SEARCH - Search for 16-bit addr given IEEE addr.
+    391           * @param       searchKey - Value to search on.
+    392           *
+    393           * output parameters
+    394           *
+    395           * None.
+    396           *
+    397           * @return      None.
+    398           **************************************************************************************************
+    399           */
+
+   \                                 In  segment CODE, align 2
+    400          void zb_FindDeviceRequest(uint8 searchType, void *searchKey)
+   \                     zb_FindDeviceRequest:
+    401          {
+    402            uint8 *pBuf = zaccelMsgBuf;
+    403          
+    404            if (searchType == ZB_IEEE_SEARCH)
+   \   000000   5C93         CMP.B   #0x1, R12
+   \   000002   1120         JNE     ??zb_FindDeviceRequest_0
+    405            {
+    406              *(pBuf+MT_RPC_POS_LEN) = 8;
+   \   000004   F242....     MOV.B   #0x8, &zaccelMsgBuf
+    407              *(pBuf+MT_RPC_POS_CMD0) = MT_RPC_SYS_SAPI | (uint8)(MT_RPC_CMD_SREQ);
+   \   000008   F2402600.... MOV.B   #0x26, &zaccelMsgBuf + 1
+    408              *(pBuf+MT_RPC_POS_CMD1) = MT_SAPI_FIND_DEV_REQ;
+   \   00000E   F2400700.... MOV.B   #0x7, &zaccelMsgBuf + 2
+    409              memcpy((pBuf+MT_RPC_POS_DAT0), searchKey, 8);
+   \   000014   3E42         MOV.W   #0x8, R14
+   \   000016   3C40....     MOV.W   #zaccelMsgBuf + 3, R12
+   \   00001A   B012....     CALL    #memcpy
+    410          
+    411              zaccelRPC(pBuf);
+   \   00001E   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   000022   B012....     CALL    #zaccelRPC
+    412            }
+    413          }
+   \                     ??zb_FindDeviceRequest_0:
+   \   000026   3041         RET
+    414          
+    415          /**************************************************************************************************
+    416           * @fn          zb_GetDeviceInfo
+    417           *
+    418           * @brief       The zb_GetDeviceInfo function retrieves a Device Information Property.
+    419           *
+    420           * input parameters
+    421           *
+    422           * @param       param - The identifier for the device information
+    423           *
+    424           * output parameters
+    425           *
+    426           * None.
+    427           *
+    428           * @return      None.
+    429           **************************************************************************************************
+    430           */
+
+   \                                 In  segment CODE, align 2
+    431          void zb_GetDeviceInfo(uint8 param)
+   \                     zb_GetDeviceInfo:
+    432          {
+    433            sapiReq(MT_SAPI_GET_DEV_INFO_REQ, param, NULL, 0);
+   \   000000   4F43         MOV.B   #0x0, R15
+   \   000002   0E43         MOV.W   #0x0, R14
+   \   000004   4D4C         MOV.B   R12, R13
+   \   000006   7C400600     MOV.B   #0x6, R12
+   \   00000A   3040....     BR      #sapiReq
+    434          }
+    435          
+    436          /**************************************************************************************************
+    437           * @fn          sapiReq
+    438           *
+    439           * @brief       This function packs and sends an RPC SAPI request.
+    440           *
+    441           * input parameters
+    442           *
+    443           * @param       cmd - A valid SAPI command.
+    444           * @param       arg - A valid argument corresponding to the SAPI command.
+    445           * @param       req - A buffer containing the contents of the request, or NULL.
+    446           * @param       len - The non-zero length of a non-NULL req buffer, or NULL.
+    447           *
+    448           * output parameters
+    449           *
+    450           * None.
+    451           *
+    452           * @return      None.
+    453           **************************************************************************************************
+    454           */
+
+   \                                 In  segment CODE, align 2
+    455          static void sapiReq(uint8 cmd, uint8 arg, uint8 *req, uint8 len)
+   \                     sapiReq:
+    456          {
+   \   000000   0A12         PUSH.W  R10
+   \   000002   4A4C         MOV.B   R12, R10
+   \   000004   0C4E         MOV.W   R14, R12
+    457            uint8 *pBuf = zaccelMsgBuf;
+    458          
+    459            *(pBuf+MT_RPC_POS_LEN) = 2 + len;
+   \   000006   4E4F         MOV.B   R15, R14
+   \   000008   6E53         ADD.B   #0x2, R14
+   \   00000A   C24E....     MOV.B   R14, &zaccelMsgBuf
+    460            *(pBuf+MT_RPC_POS_CMD0) = MT_RPC_SYS_SAPI;
+   \   00000E   F2400600.... MOV.B   #0x6, &zaccelMsgBuf + 1
+    461            *(pBuf+MT_RPC_POS_CMD1) = cmd;
+   \   000014   C24A....     MOV.B   R10, &zaccelMsgBuf + 2
+    462            *(pBuf+MT_RPC_POS_DAT0) = arg;
+   \   000018   C24D....     MOV.B   R13, &zaccelMsgBuf + 3
+    463            *(pBuf+MT_RPC_POS_DAT0+1) = len;
+   \   00001C   C24F....     MOV.B   R15, &zaccelMsgBuf + 4
+    464            if (req)
+   \   000020   0C93         CMP.W   #0x0, R12
+   \   000022   0624         JEQ     ??sapiReq_0
+    465            {
+    466              memcpy((pBuf+MT_RPC_POS_DAT0+2), req, len);
+   \   000024   4E4F         MOV.B   R15, R14
+   \   000026   0D4C         MOV.W   R12, R13
+   \   000028   3C40....     MOV.W   #zaccelMsgBuf + 5, R12
+   \   00002C   B012....     CALL    #memcpy
+    467            }
+    468          
+    469            if (cmd == MT_SAPI_SYS_RESET)
+   \                     ??sapiReq_0:
+   \   000030   7A900900     CMP.B   #0x9, R10
+   \   000034   0420         JNE     ??sapiReq_1
+    470            {
+    471              *(pBuf+MT_RPC_POS_CMD0) |= MT_RPC_CMD_AREQ;
+   \   000036   F2D04000.... BIS.B   #0x40, &zaccelMsgBuf + 1
+   \   00003C   033C         JMP     ??sapiReq_2
+    472            }
+    473            else
+    474            {
+    475              *(pBuf+MT_RPC_POS_CMD0) |= MT_RPC_CMD_SREQ;
+   \                     ??sapiReq_1:
+   \   00003E   F2D02000.... BIS.B   #0x20, &zaccelMsgBuf + 1
+    476            }
+    477            zaccelRPC(pBuf);
+   \                     ??sapiReq_2:
+   \   000044   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   000048   B012....     CALL    #zaccelRPC
+    478          }
+   \   00004C   3A41         POP.W   R10
+   \   00004E   3041         RET
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   sapiReq
+        4   -> memcpy
+        4   -> zaccelRPC
+      2   zb_AllowBind
+        2   -> zaccelRPC
+      2   zb_BindDevice
+        2   -> memcpy
+        2   -> zaccelRPC
+      2   zb_FindDeviceRequest
+        2   -> memcpy
+        2   -> zaccelRPC
+      2   zb_GetDeviceInfo
+        2   -> sapiReq
+      2   zb_PermitJoiningRequest
+        2   -> zaccelRPC
+      2   zb_ReadConfiguration
+        2   -> zaccelRPC
+      2   zb_SapiAppRegister
+        2   -> memcpy
+        2   -> zaccelRPC
+      6   zb_SendDataRequest
+        6   -> memcpy
+        6   -> zaccelRPC
+      4   zb_StartRequest
+        4   -> zb_SystemReset
+        4   -> zb_WriteConfiguration
+      2   zb_SystemReset
+        2   -> sapiReq
+      2   zb_WriteConfiguration
+        2   -> memcpy
+        2   -> zaccelRPC
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      80  sapiReq
+      26  zb_AllowBind
+      52  zb_BindDevice
+      40  zb_FindDeviceRequest
+      14  zb_GetDeviceInfo
+      38  zb_PermitJoiningRequest
+      26  zb_ReadConfiguration
+      56  zb_SapiAppRegister
+     100  zb_SendDataRequest
+      28  zb_StartRequest
+      14  zb_SystemReset
+      50  zb_WriteConfiguration
+
+ 
+ 524 bytes in segment CODE
+ 
+ 524 bytes of CODE memory
+
+Errors: none
+Warnings: none

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\ZASA.ewp</path>
+  </project>
+  <batchBuild>
+    <batchDefinition>
+      <name>All Devices</name>
+      <member>
+        <project>ZASA</project>
+        <configuration>CC2480 Coordinator</configuration>
+      </member>
+      <member>
+        <project>ZASA</project>
+        <configuration>CC2480 Router</configuration>
+      </member>
+      <member>
+        <project>ZASA</project>
+        <configuration>CC2480 EndDevice</configuration>
+      </member>
+    </batchDefinition>
+  </batchBuild>
+</workspace>

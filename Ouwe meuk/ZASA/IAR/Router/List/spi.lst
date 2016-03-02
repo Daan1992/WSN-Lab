@@ -1,0 +1,477 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V6.20.1.931/W32 for MSP430           26/Jun/2015  10:51:11
+# Copyright 1996-2014 IAR Systems AB.
+# Standalone license - IAR Embedded Workbench for Texas Instruments MSP430, 8K KickStart Edition 6.20
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430
+#    Source file   =  
+#        C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\common\zaccel\spi.c
+#    Command line  =  
+#        -f "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\Source\ZASA.cfg" (-DZACCEL_BUF_LEN=128
+#        -DHOST_MT_BAUD=9600 -DHOST_MT_RX_OLD=1
+#        "-DHOST_MT_RX_FULL=(ZACCEL_BUF_LEN-1)" -DZACCEL_NV_CHANLIST=0x00008000
+#        -DZACCEL_NV_PANID=0x0DED)
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\common\zaccel\spi.c" -D ROUTER -D APP_BLINK_LEDS -lC
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\Router\List\" --remarks --diag_suppress Pe068 -o
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\Router\Obj\" --debug -D__MSP430F2274__
+#        --warnings_are_errors -e --double=32 --clib -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\Source\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\common\zaccel\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\common\mt\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\target\include\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\target\cc2480\" --reduce_stack_usage -Ohz
+#        --require_prototypes
+#    List file     =  
+#        C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\Router\List\spi.lst
+#    Object file   =  
+#        C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\Router\Obj\spi.r43
+#
+###############################################################################
+
+C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE M&M\common\zaccel\spi.c
+      1          /**************************************************************************************************
+      2              Filename:       spi.c
+      3              Revised:        $Date: 2008-03-28 15:13:08 -0700 (Fri, 28 Mar 2008) $
+      4              Revision:       $Revision: 16675 $
+      5          
+      6              Description:
+      7          
+      8              This file contains the main functionality of the Host interface to the ZACCEL via RPC by SPI.
+      9          
+     10              Copyright 2006-2007 Texas Instruments Incorporated. All rights reserved.
+     11          
+     12              IMPORTANT: Your use of this Software is limited to those specific rights
+     13              granted under the terms of a software license agreement between the user
+     14              who downloaded the software, his/her employer (which must be your employer)
+     15              and Texas Instruments Incorporated (the "License").  You may not use this
+     16              Software unless you agree to abide by the terms of the License. The License
+     17              limits your use, and you acknowledge, that the Software may not be modified,
+     18              copied or distributed unless embedded on a Texas Instruments microcontroller
+     19              or used solely and exclusively in conjunction with a Texas Instruments radio
+     20              frequency transceiver, which is integrated into your product.  Other than for
+     21              the foregoing purpose, you may not use, reproduce, copy, prepare derivative
+     22              works of, modify, distribute, perform, display or sell this Software and/or
+     23              its documentation for any purpose.
+     24          
+     25              YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
+     26              PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+     27              INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
+     28              NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
+     29              TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
+     30              NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
+     31              LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES
+     32              INCLUDING BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE
+     33              OR CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT
+     34              OF SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
+     35              (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
+     36          
+     37              Should you have any questions regarding your right to use this Software,
+     38              contact Texas Instruments Incorporated at www.TI.com.
+     39          **************************************************************************************************/
+     40          
+     41          /* ------------------------------------------------------------------------------------------------
+     42           *                                          Includes
+     43           * ------------------------------------------------------------------------------------------------
+     44           */
+     45          
+     46          #include "hal_board.h"
+
+   \                                 In  segment DATA16_AN, at 0x28
+   \   unsigned char const volatile P2IN
+   \                     P2IN:
+   \   000000                DS8 1
+
+   \                                 In  segment DATA16_AN, at 0x2c
+   \   unsigned char volatile P2IES
+   \                     P2IES:
+   \   000000                DS8 1
+
+   \                                 In  segment DATA16_AN, at 0x19
+   \   unsigned char volatile P3OUT
+   \                     P3OUT:
+   \   000000                DS8 1
+     47          #include "spi.h"
+     48          
+     49          /* ------------------------------------------------------------------------------------------------
+     50           *                                           Macros
+     51           * ------------------------------------------------------------------------------------------------
+     52           */
+     53          
+     54          // RPC protocol on SREQ is to wait for slave to signal ready by setting its SRDY line to opposite.
+     55          #define SRDY_RSP()  (!SRDY())
+     56          
+     57          /* ------------------------------------------------------------------------------------------------
+     58           *                                           Constants
+     59           * ------------------------------------------------------------------------------------------------
+     60           */
+     61          
+     62          #define SRDY_WAIT_MSECS  10
+     63          
+     64          /* ------------------------------------------------------------------------------------------------
+     65           *                                           Local Variables
+     66           * ------------------------------------------------------------------------------------------------
+     67           */
+     68          
+     69          /* ------------------------------------------------------------------------------------------------
+     70           *                                           Local Functions
+     71           * ------------------------------------------------------------------------------------------------
+     72           */
+     73          
+     74          static void  getSRDY1(void);
+     75          static uint8 getSRDY2(void);
+     76          
+     77          /**************************************************************************************************
+     78           * @fn          spiSREQ
+     79           *
+     80           * @brief       This function effects a synchronous transaction with the NP slave
+     81           *              according to the RPC protocol for the SREQ.
+     82           *
+     83           * input parameters
+     84           *
+     85           * @param       pBuf - Pointer to the buffer to Tx across the SPI.
+     86           *
+     87           * output parameters
+     88           *
+     89           * @param       pBuf - Pointer to the data received across the SPI.
+     90           *
+     91           * @return      None.
+     92           **************************************************************************************************
+     93           */
+
+   \                                 In  segment CODE, align 2, keep-with-next
+   \                     ?Subroutine0:
+   \   000000   F2D040001900 BIS.B   #0x40, &0x19
+   \   000006   D2D31900     BIS.B   #0x1, &0x19
+   \   00000A   3A41         POP.W   R10
+   \   00000C   3041         RET
+
+   \                                 In  segment CODE, align 2
+     94          void spiSREQ(uint8 *pBuf)
+   \                     spiSREQ:
+     95          {
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+     96            do {
+     97              getSRDY1();
+   \                     ??spiSREQ_0:
+   \   000004   B012....     CALL    #?Subroutine1
+     98              // Send the host SREQ-message across SPI.
+     99              halSPIWrite(HAL_SPI_ZACCEL, pBuf, (*pBuf+MT_RPC_FRAME_HDR_SZ));
+    100          
+    101              /* Now setup the POLL command in the buffer which has just been transmitted and which will now
+    102               * be used to receive the SREQ in response.
+    103               */
+    104              *pBuf = 0;                    // POLL command has zero data bytes.
+   \                     ??CrossCallReturnLabel_3:
+   \   000008   CA430000     MOV.B   #0x0, 0(R10)
+    105              *(pBuf+1) = MT_RPC_CMD_POLL;  // POLL command MSB.
+   \   00000C   CA430100     MOV.B   #0x0, 0x1(R10)
+    106              *(pBuf+2) = 0;                // POLL command LSB.
+   \   000010   CA430200     MOV.B   #0x0, 0x2(R10)
+    107            } while (!getSRDY2());
+   \   000014   B012....     CALL    #getSRDY2
+   \   000018   4C93         CMP.B   #0x0, R12
+   \   00001A   F427         JEQ     ??spiSREQ_0
+    108          
+    109            halSPIWrite(HAL_SPI_ZACCEL, pBuf, MT_RPC_FRAME_HDR_SZ);  // Send the POLL across the SPI.
+   \   00001C   7E400300     MOV.B   #0x3, R14
+   \   000020   B012....     CALL    #?Subroutine3
+    110          
+    111            // Receive the rest of the slave's message if it is longer than the POLL.
+    112            if (*pBuf != 0)
+   \                     ??CrossCallReturnLabel_4:
+   \   000024   6E4A         MOV.B   @R10, R14
+   \   000026   4E93         CMP.B   #0x0, R14
+   \   000028   0424         JEQ     ??spiSREQ_1
+    113            {
+    114              halSPIWrite(HAL_SPI_ZACCEL, pBuf+MT_RPC_FRAME_HDR_SZ, *pBuf);
+   \   00002A   3A500300     ADD.W   #0x3, R10
+   \   00002E   B012....     CALL    #?Subroutine3
+    115            }
+    116          
+    117            MRDY_Clr();                     // MRDY must be cleared before setting it again to talk again.
+   \                     ??spiSREQ_1:
+   \   000032   ....         JMP     ?Subroutine0
+   \   000034                REQUIRE P3OUT
+    118          }
+
+   \                                 In  segment CODE, align 2, keep-with-next
+   \                     ?Subroutine1:
+   \   000000   B012....     CALL    #getSRDY1
+   \   000004   6E4A         MOV.B   @R10, R14
+   \   000006   7E500300     ADD.B   #0x3, R14
+   \   00000A                REQUIRE ?Subroutine3
+   \   00000A                // Fall through to label ?Subroutine3
+
+   \                                 In  segment CODE, align 2
+   \                     ?Subroutine3:
+   \   000000   0D4A         MOV.W   R10, R13
+   \   000002   4C43         MOV.B   #0x0, R12
+   \   000004   3040....     BR      #halSPIWrite
+    119          
+    120          /**************************************************************************************************
+    121           * @fn          spiAREQ
+    122           *
+    123           * @brief       This function effects an asynchronous transaction with the NP slave
+    124           *              according to the RPC protocol for the AREQ.
+    125           *
+    126           * input parameters
+    127           *
+    128           * @param       pBuf - Pointer to the buffer to Tx across the SPI.
+    129           *
+    130           * output parameters
+    131           *
+    132           * None.
+    133           *
+    134           * @return      None.
+    135           **************************************************************************************************
+    136           */
+
+   \                                 In  segment CODE, align 2, keep-with-next
+    137          void spiAREQ(uint8 *pBuf)
+   \                     spiAREQ:
+    138          {
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+    139            do {
+    140              getSRDY1();
+   \                     ??spiAREQ_0:
+   \   000004   B012....     CALL    #?Subroutine1
+    141              // Send the host AREQ-message across SPI.
+    142              halSPIWrite(HAL_SPI_ZACCEL, pBuf, (*pBuf+MT_RPC_FRAME_HDR_SZ));
+    143            } while (!getSRDY2());
+   \                     ??CrossCallReturnLabel_2:
+   \   000008   B012....     CALL    #getSRDY2
+   \   00000C   4C93         CMP.B   #0x0, R12
+   \   00000E   FA27         JEQ     ??spiAREQ_0
+    144          
+    145            MRDY_Clr();                     // MRDY must be cleared before setting it again to talk again.
+   \   000010                REQUIRE ?Subroutine0
+   \   000010                REQUIRE P3OUT
+   \   000010                // Fall through to label ?Subroutine0
+    146          }
+    147          
+    148          /**************************************************************************************************
+    149           * @fn          spiPOLL
+    150           *
+    151           * @brief       This function polls the NP slave according to the RPC protocol for POLL.
+    152           *
+    153           * input parameters
+    154           *
+    155           * @param       pBuf - Pointer to the buffer to Tx a POLL across the SPI and then receive the AREQ.
+    156           *
+    157           * output parameters
+    158           *
+    159           * @param       pBuf - Pointer to the buffer to Tx a POLL across the SPI and then receive the AREQ.
+    160           *
+    161           * @return      None.
+    162           **************************************************************************************************
+    163           */
+
+   \                                 In  segment CODE, align 2
+    164          void spiPOLL(uint8 *pBuf)
+   \                     spiPOLL:
+    165          {
+    166            // Setup the POLL command in the buffer.
+    167            *pBuf = 0;                      // POLL command has zero data bytes.
+   \   000000   CC430000     MOV.B   #0x0, 0(R12)
+    168            *(pBuf+1) = MT_RPC_CMD_POLL;    // POLL command MSB.
+   \   000004   CC430100     MOV.B   #0x0, 0x1(R12)
+    169            *(pBuf+2) = 0;                  // POLL command LSB.
+   \   000008   CC430200     MOV.B   #0x0, 0x2(R12)
+    170          
+    171            spiSREQ(pBuf);
+   \   00000C   3040....     BR      #spiSREQ
+    172          }
+    173          
+    174          /**************************************************************************************************
+    175           * @fn          getSRDY1
+    176           *
+    177           * @brief       This function cycles setting MRDY and timing out waiting for SRDY until success.
+    178           *
+    179           * input parameters
+    180           *
+    181           * None.
+    182           *
+    183           * output parameters
+    184           *
+    185           * None.
+    186           *
+    187           * @return      None.
+    188           **************************************************************************************************
+    189           */
+
+   \                                 In  segment CODE, align 2
+    190          static void getSRDY1(void)
+   \                     getSRDY1:
+    191          {
+    192            MRDY_Set();     // MRDY must be set before talking to the slave.
+   \   000000   F2C040001900 BIC.B   #0x40, &0x19
+   \   000006   D2C31900     BIC.B   #0x1, &0x19
+    193          
+    194            halDelay(SRDY_WAIT_MSECS, FALSE);
+   \   00000A   B012....     CALL    #?Subroutine2
+   \                     ??CrossCallReturnLabel_0:
+   \   00000E   023C         JMP     ??getSRDY1_1
+    195            while (!SRDY() && !halDelayDone())
+    196            {
+    197              HAL_LOW_POWER_MODE();
+   \                     ??getSRDY1_0:
+   \   000010   32D0D800     BIS.W   #0xd8, SR
+    198            }
+   \                     ??getSRDY1_1:
+   \   000014   F2B040002800 BIT.B   #0x40, &0x28
+   \   00001A   0428         JNC     ??getSRDY1_2
+   \   00001C   B012....     CALL    #halDelayDone
+   \   000020   4C93         CMP.B   #0x0, R12
+   \   000022   F627         JEQ     ??getSRDY1_0
+    199          
+    200            if (!SRDY())
+   \                     ??getSRDY1_2:
+   \   000024   F2B040002800 BIT.B   #0x40, &0x28
+   \   00002A   0C28         JNC     ??getSRDY1_3
+    201            {
+    202              MRDY_Clr();   // MRDY must be cleared before setting it again to talk again.
+   \   00002C   F2D040001900 BIS.B   #0x40, &0x19
+   \   000032   D2D31900     BIS.B   #0x1, &0x19
+    203              halSlaveReset();
+   \   000036   B012....     CALL    #halSlaveReset
+    204              MRDY_Set();   // MRDY must be set before talking to the slave.
+   \   00003A   F2C040001900 BIC.B   #0x40, &0x19
+   \   000040   D2C31900     BIC.B   #0x1, &0x19
+    205            }
+    206          }
+   \                     ??getSRDY1_3:
+   \   000044   3041         RET
+   \   000046                REQUIRE P3OUT
+   \   000046                REQUIRE P2IN
+
+   \                                 In  segment CODE, align 2
+   \                     ?Subroutine2:
+   \   000000   4D43         MOV.B   #0x0, R13
+   \   000002   7C400A00     MOV.B   #0xa, R12
+   \   000006   3040....     BR      #halDelay
+    207          
+    208          /**************************************************************************************************
+    209           * @fn          getSRDY2
+    210           *
+    211           * @brief       This function times out waiting for the SRDY_RSP.
+    212           *
+    213           * input parameters
+    214           *
+    215           * None.
+    216           *
+    217           * output parameters
+    218           *
+    219           * None.
+    220           *
+    221           * @return      TRUE if the slave signals SRDY_RSP.
+    222           **************************************************************************************************
+    223           */
+
+   \                                 In  segment CODE, align 2
+    224          static uint8 getSRDY2(void)
+   \                     getSRDY2:
+    225          {
+    226            HAL_CFG_SRDY_RSP_ISR;
+   \   000000   C2432C00     MOV.B   #0x0, &0x2c
+    227          
+    228            halDelay(SRDY_WAIT_MSECS, FALSE);
+   \   000004   B012....     CALL    #?Subroutine2
+   \                     ??CrossCallReturnLabel_1:
+   \   000008   023C         JMP     ??getSRDY2_1
+    229            while (!SRDY_RSP() && !halDelayDone())
+    230            {
+    231              HAL_LOW_POWER_MODE();
+   \                     ??getSRDY2_0:
+   \   00000A   32D0D800     BIS.W   #0xd8, SR
+    232            }
+   \                     ??getSRDY2_1:
+   \   00000E   F2B040002800 BIT.B   #0x40, &0x28
+   \   000014   042C         JC      ??getSRDY2_2
+   \   000016   B012....     CALL    #halDelayDone
+   \   00001A   4C93         CMP.B   #0x0, R12
+   \   00001C   F627         JEQ     ??getSRDY2_0
+    233          
+    234            HAL_CFG_SRDY_ISR;
+   \                     ??getSRDY2_2:
+   \   00001E   F24040002C00 MOV.B   #0x40, &0x2c
+    235          
+    236            return SRDY_RSP();
+   \   000024   F2B040002800 BIT.B   #0x40, &0x28
+   \   00002A   4C7C         SUBC.B  R12, R12
+   \   00002C   5C53         ADD.B   #0x1, R12
+   \   00002E   3041         RET
+   \   000030                REQUIRE P2IES
+   \   000030                REQUIRE P2IN
+    237          }
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      2   getSRDY1
+        2   -> halDelay
+        2   -> halDelayDone
+        2   -> halSlaveReset
+      2   getSRDY2
+        2   -> halDelay
+        2   -> halDelayDone
+      4   spiAREQ
+        4   -> getSRDY1
+        4   -> getSRDY2
+        4   -> halSPIWrite
+      2   spiPOLL
+        2   -> spiSREQ
+      4   spiSREQ
+        4   -> getSRDY1
+        4   -> getSRDY2
+        4   -> halSPIWrite
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      14  ?Subroutine0
+      10  ?Subroutine1
+      10  ?Subroutine2
+       8  ?Subroutine3
+       1  P2IES
+       1  P2IN
+       1  P3OUT
+      70  getSRDY1
+      48  getSRDY2
+      16  spiAREQ
+      16  spiPOLL
+      52  spiSREQ
+
+ 
+ 244 bytes in segment CODE
+   3 bytes in segment DATA16_AN
+ 
+ 244 bytes of CODE memory
+   0 bytes of DATA memory (+ 3 bytes shared)
+
+Errors: none
+Warnings: none

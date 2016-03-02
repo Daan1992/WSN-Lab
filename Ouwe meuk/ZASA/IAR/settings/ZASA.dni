@@ -1,0 +1,107 @@
+[State Storage]
+Control Register=35480
+[Sequencer]
+Control Register=35480
+NextState0=35480
+NextState1=35480
+[Action Register]
+Break=0
+State Storage=1
+[StackPlugin]
+Enabled=1
+OverflowWarningsEnabled=1
+WarningThreshold=90
+SpWarningsEnabled=1
+WarnHow=0
+UseTrigger=1
+TriggerName=main
+LimitSize=0
+ByteLimit=50
+[DebugChecksum]
+Checksum=-1602861359
+[DisAssemblyWindow]
+NumStates=_ 1
+State 1=_ 1
+[InstructionProfiling]
+Enabled=_ 0
+[CodeCoverage]
+Enabled=_ 0
+[Profiling]
+Enabled=0
+[Stack]
+FillEnabled=0
+OverflowWarningsEnabled=1
+WarningThreshold=90
+SpWarningsEnabled=1
+WarnLogOnly=1
+UseTrigger=1
+TriggerName=main
+LimitSize=0
+ByteLimit=50
+[CallStack]
+ShowArgs=0
+[Disassembly]
+MixedMode=1
+[CallStackLog]
+Enabled=0
+[DriverProfiling]
+Enabled=0
+Mode=0
+Graph=0
+Symbiont=0
+Exclusions=
+[EEM State Storage]
+Buffer=BAAAAAAADAAAAAAAAAAAAAAA
+[NumberOfSequencerBp]
+Number=4
+[EEM Sequencer]
+Buffer=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[EEM Cycle Counter 0]
+Counter0=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[EEM Cycle Counter 1]
+Counter1=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[Breakpoints]
+Bp0=_ "STD_CODE" "{$PROJ_DIR$\..\Source\ZASA_enddev.c}.185.5" 0 0 0 0 "" 0 ""
+Count=1
+[FET]
+Clock mode=38
+Extended Clock mode=1
+Secure Password=
+Extended Clock Control Enable=1
+Advanced Extended Clock Control=0
+Emulation mode=0
+Free running=0
+Shutting Down=3
+[Memory Dump]
+Start address=
+Lenghth=
+Address info=0
+Format=0
+Dump registers=0
+PC=0
+SP=0
+SR=0
+all registers=0
+File name=
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[Aliases]
+A0=_ "C:\Users\Administrator\Desktop\ZIGBEE M&M\ZASA\Source\ZASA_main.c" ""
+A1=_ "C:\Users\Administrator\Desktop\ZIGBEE M&M\common\zaccel\sapi_cb.c" ""
+A2=_ "C:\Users\Administrator\Desktop\ZIGBEE M&M\common\zaccel\spi.c" ""
+A3=_ "C:\Users\Administrator\Desktop\ZIGBEE M&M\common\zaccel\zaccel.c" ""
+A4=_ "C:\Users\Administrator\Desktop\ZIGBEE M&M\target\cc2480\hal_board.c" ""
+A5=_ "D:\programmas wtws\eZ430-RF2480\ZASA\Source\ZASA_main.c" "C:\eZ430-RF2480\ZASA\Source\ZASA_main.c"
+A6=_ "D:\programmas wtws\eZ430-RF2480\common\mt\mt.c" "C:\eZ430-RF2480\common\mt\mt.c"
+A7=_ "D:\programmas wtws\eZ430-RF2480\common\zaccel\sapi.c" ""
+A8=_ "D:\programmas wtws\eZ430-RF2480\common\zaccel\sapi_cb.c" ""
+A9=_ "D:\programmas wtws\eZ430-RF2480\common\zaccel\spi.c" ""
+A10=_ "D:\programmas wtws\eZ430-RF2480\common\zaccel\zaccel.c" ""
+A11=_ "D:\programmas wtws\eZ430-RF2480\target\cc2480\hal_board.c" "C:\eZ430-RF2480\target\cc2480\hal_board.c"
+Count=12
+SuppressDialog=0

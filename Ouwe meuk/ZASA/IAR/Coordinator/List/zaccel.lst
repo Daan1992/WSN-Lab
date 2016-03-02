@@ -1,0 +1,672 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V6.20.1.931/W32 for MSP430           01/Jun/2015  11:50:32
+# Copyright 1996-2014 IAR Systems AB.
+# Standalone license - IAR Embedded Workbench for Texas Instruments MSP430, 8K KickStart Edition 6.20
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430
+#    Source file   =  
+#        C:\Users\Administrator\Desktop\ZIGBEE M&M\common\zaccel\zaccel.c
+#    Command line  =  
+#        -f "C:\Users\Administrator\Desktop\ZIGBEE
+#        M&M\ZASA\IAR\..\Source\ZASA.cfg" (-DZACCEL_BUF_LEN=128
+#        -DHOST_MT_BAUD=9600 -DHOST_MT_RX_OLD=1
+#        "-DHOST_MT_RX_FULL=(ZACCEL_BUF_LEN-1)" -DZACCEL_NV_CHANLIST=0x00008000
+#        -DZACCEL_NV_PANID=0x0DED) "C:\Users\Administrator\Desktop\ZIGBEE
+#        M&M\common\zaccel\zaccel.c" -D COORDINATOR -D HOST_MT -D
+#        APP_BLINK_LEDS -lC "C:\Users\Administrator\Desktop\ZIGBEE
+#        M&M\ZASA\IAR\Coordinator\List\" --remarks --diag_suppress Pe068 -o
+#        "C:\Users\Administrator\Desktop\ZIGBEE M&M\ZASA\IAR\Coordinator\Obj\"
+#        --debug -D__MSP430F2274__ --warnings_are_errors -e --double=32 --clib
+#        -I "C:\Users\Administrator\Desktop\ZIGBEE M&M\ZASA\IAR\" -I
+#        "C:\Users\Administrator\Desktop\ZIGBEE M&M\ZASA\IAR\..\Source\" -I
+#        "C:\Users\Administrator\Desktop\ZIGBEE
+#        M&M\ZASA\IAR\..\..\common\zaccel\" -I
+#        "C:\Users\Administrator\Desktop\ZIGBEE M&M\ZASA\IAR\..\..\common\mt\"
+#        -I "C:\Users\Administrator\Desktop\ZIGBEE
+#        M&M\ZASA\IAR\..\..\target\include\" -I
+#        "C:\Users\Administrator\Desktop\ZIGBEE
+#        M&M\ZASA\IAR\..\..\target\cc2480\" --reduce_stack_usage -Ohz
+#        --require_prototypes
+#    List file     =  
+#        C:\Users\Administrator\Desktop\ZIGBEE
+#        M&M\ZASA\IAR\Coordinator\List\zaccel.lst
+#    Object file   =  
+#        C:\Users\Administrator\Desktop\ZIGBEE
+#        M&M\ZASA\IAR\Coordinator\Obj\zaccel.r43
+#
+###############################################################################
+
+C:\Users\Administrator\Desktop\ZIGBEE M&M\common\zaccel\zaccel.c
+      1          /**************************************************************************************************
+      2              Filename:       zaccel.c
+      3              Revised:        $Date: 2008-03-28 15:13:08 -0700 (Fri, 28 Mar 2008) $
+      4              Revision:       $Revision: 16675 $
+      5          
+      6              Description: This file contains the main functionality of the Host side of the RPC protocol.
+      7          
+      8              Copyright 2006-2007 Texas Instruments Incorporated. All rights reserved.
+      9          
+     10              IMPORTANT: Your use of this Software is limited to those specific rights
+     11              granted under the terms of a software license agreement between the user
+     12              who downloaded the software, his/her employer (which must be your employer)
+     13              and Texas Instruments Incorporated (the "License").  You may not use this
+     14              Software unless you agree to abide by the terms of the License. The License
+     15              limits your use, and you acknowledge, that the Software may not be modified,
+     16              copied or distributed unless embedded on a Texas Instruments microcontroller
+     17              or used solely and exclusively in conjunction with a Texas Instruments radio
+     18              frequency transceiver, which is integrated into your product.  Other than for
+     19              the foregoing purpose, you may not use, reproduce, copy, prepare derivative
+     20              works of, modify, distribute, perform, display or sell this Software and/or
+     21              its documentation for any purpose.
+     22          
+     23              YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
+     24              PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+     25              INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
+     26              NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
+     27              TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
+     28              NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
+     29              LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES
+     30              INCLUDING BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE
+     31              OR CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT
+     32              OF SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
+     33              (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
+     34          
+     35              Should you have any questions regarding your right to use this Software,
+     36              contact Texas Instruments Incorporated at www.TI.com.
+     37          **************************************************************************************************/
+     38          
+     39          /* ------------------------------------------------------------------------------------------------
+     40           *                                          Includes
+     41           * ------------------------------------------------------------------------------------------------
+     42           */
+     43          
+     44          #include "zaccel.h"
+     45          #include "hal_board.h"
+
+   \                                 In  segment DATA16_AN, at 0x28
+   \   unsigned char const volatile P2IN
+   \                     P2IN:
+   \   000000                DS8 1
+
+   \                                 In  segment DATA16_AN, at 0x19
+   \   unsigned char volatile P3OUT
+   \                     P3OUT:
+   \   000000                DS8 1
+     46          #include "mt.h"
+     47          #include "sapi.h"
+     48          #include "spi.h"
+     49          
+     50          /* ------------------------------------------------------------------------------------------------
+     51           *                                           Macros
+     52           * ------------------------------------------------------------------------------------------------
+     53           */
+     54          
+     55          /* ------------------------------------------------------------------------------------------------
+     56           *                                           Constants
+     57           * ------------------------------------------------------------------------------------------------
+     58           */
+     59          
+     60          /* ------------------------------------------------------------------------------------------------
+     61           *                                           Global Variables
+     62           * ------------------------------------------------------------------------------------------------
+     63           */
+     64          
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     65          devStates_t zaccelNwkState;
+   \                     zaccelNwkState:
+   \   000000                DS8 1
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     66          uint16 zaccelNwkAddr;
+   \                     zaccelNwkAddr:
+   \   000000                DS8 2
+     67          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     68          uint16 zaccelBndAddr;
+   \                     zaccelBndAddr:
+   \   000000                DS8 2
+     69          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     70          uint16 zaccelEvtFlags;
+   \                     zaccelEvtFlags:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     71          uint16 zaccelIndFlags;
+   \                     zaccelIndFlags:
+   \   000000                DS8 2
+     72          
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     73          uint8 zaccelMsgBuf[ZACCEL_BUF_LEN];
+   \                     zaccelMsgBuf:
+   \   000000                DS8 128
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     74          uint16 zaccelDataCmd, zaccelDataSrc, zaccelDataLen;
+   \                     zaccelDataCmd:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+   \                     zaccelDataSrc:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+   \                     zaccelDataLen:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     75          uint8 zaccelDataBuf[ZACCEL_BUF_LEN];
+   \                     zaccelDataBuf:
+   \   000000                DS8 128
+     76          
+     77          /* ------------------------------------------------------------------------------------------------
+     78           *                                           Local Variables
+     79           * ------------------------------------------------------------------------------------------------
+     80           */
+     81          
+     82          /* ------------------------------------------------------------------------------------------------
+     83           *                                           Local Functions
+     84           * ------------------------------------------------------------------------------------------------
+     85           */
+     86          
+     87          static void rpcRsp(uint8 *pBuf);
+     88          static uint16 sysRsp(uint8 *pBuf);
+     89          static uint16 sapiRsp(uint8 *pBuf);
+     90          
+     91          /**************************************************************************************************
+     92           * @fn          zaccelInit
+     93           *
+     94           * @brief       This function initializes the host RPC environment.
+     95           *
+     96           * input parameters
+     97           *
+     98           * None.
+     99           *
+    100           * output parameters
+    101           *
+    102           * None.
+    103           *
+    104           * @return      None.
+    105           **************************************************************************************************
+    106           */
+
+   \                                 In  segment CODE, align 2
+    107          void zaccelInit(void)
+   \                     zaccelInit:
+    108          {
+    109            halSlaveReset();
+   \   000000   B012....     CALL    #halSlaveReset
+    110          
+    111            /* In case the Z-Accel is still doing a power-up CRC check, toggle MRDY to signal to
+    112             * write the result and thereby bypass all future power-up CRC checks.
+    113             */
+    114            MRDY_Set();
+   \   000004   F2C040001900 BIC.B   #0x40, &0x19
+   \   00000A   D2C31900     BIC.B   #0x1, &0x19
+    115            MRDY_Clr();
+   \   00000E   F2D040001900 BIS.B   #0x40, &0x19
+   \   000014   D2D31900     BIS.B   #0x1, &0x19
+    116          
+    117            zaccelNwkAddr  = INVALID_NODE_ADDR;
+   \   000018   B240FEFF.... MOV.W   #0xfffe, &zaccelNwkAddr
+    118            zaccelEvtFlags = ZACCEL_EVT_NONE;
+   \   00001E   8243....     MOV.W   #0x0, &zaccelEvtFlags
+    119            zaccelIndFlags = ZACCEL_STATUS_CLEAR;
+   \   000022   8243....     MOV.W   #0x0, &zaccelIndFlags
+    120          }
+   \   000026   3041         RET
+   \   000028                REQUIRE P3OUT
+    121          
+    122          /**************************************************************************************************
+    123           * @fn          zaccelPoll
+    124           *
+    125           * @brief       Poll the Z-Accel slave for asynchronous command and drive the RPC transaction.
+    126           *
+    127           * input parameters
+    128           *
+    129           * None.
+    130           *
+    131           * output parameters
+    132           *
+    133           * None.
+    134           *
+    135           * @return      None.
+    136           **************************************************************************************************
+    137           */
+
+   \                                 In  segment CODE, align 2
+    138          void zaccelPoll(void)
+   \                     zaccelPoll:
+    139          {
+    140            // If the NP slave indicates that an AREQ is ready, then poll for it.
+    141            if (SRDY())
+   \   000000   F2B040002800 BIT.B   #0x40, &0x28
+   \   000006   0C2C         JC      ??zaccelPoll_0
+    142            {
+    143              uint8 *pBuf = zaccelMsgBuf;
+    144          
+    145              spiPOLL(pBuf);
+   \   000008   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   00000C   B012....     CALL    #spiPOLL
+    146          #ifdef HOST_MT
+    147              mtTx(pBuf);
+   \   000010   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   000014   B012....     CALL    #mtTx
+    148          #endif
+    149              rpcRsp(pBuf);
+   \   000018   3C40....     MOV.W   #zaccelMsgBuf, R12
+   \   00001C   B012....     CALL    #rpcRsp
+    150            }
+    151          }
+   \                     ??zaccelPoll_0:
+   \   000020   3041         RET
+   \   000022                REQUIRE P2IN
+    152          
+    153          /**************************************************************************************************
+    154           * @fn          zaccelRPC
+    155           *
+    156           * @brief       This function effects the requested RPC transaction across the configured medium.
+    157           *
+    158           * input parameters
+    159           *
+    160           * @param       pBuf - Pointer to the RPC buffer.
+    161           *
+    162           * output parameters
+    163           *
+    164           * None.
+    165           *
+    166           * @return      None.
+    167           **************************************************************************************************
+    168           */
+
+   \                                 In  segment CODE, align 2
+    169          void zaccelRPC(uint8 *pBuf)
+   \                     zaccelRPC:
+    170          {
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+    171            if (MT_RPC_CMD_SREQ == (*(pBuf+MT_RPC_POS_CMD0) & (MT_RPC_CMD_SREQ | MT_RPC_CMD_AREQ)))
+   \   000004   5E4C0100     MOV.B   0x1(R12), R14
+   \   000008   7EF06000     AND.B   #0x60, R14
+   \   00000C   7E902000     CMP.B   #0x20, R14
+   \   000010   0920         JNE     ??zaccelRPC_0
+    172            {
+    173              spiSREQ(pBuf);
+   \   000012   B012....     CALL    #spiSREQ
+    174          #ifdef HOST_MT
+    175              mtTx(pBuf);
+   \   000016   0C4A         MOV.W   R10, R12
+   \   000018   B012....     CALL    #mtTx
+    176          #endif
+    177              rpcRsp(pBuf);
+   \   00001C   0C4A         MOV.W   R10, R12
+   \   00001E   B012....     CALL    #rpcRsp
+   \   000022   023C         JMP     ??zaccelRPC_1
+    178            }
+    179            else
+    180            {
+    181              spiAREQ(pBuf);
+   \                     ??zaccelRPC_0:
+   \   000024   B012....     CALL    #spiAREQ
+    182            }
+    183          }
+   \                     ??zaccelRPC_1:
+   \   000028   3A41         POP.W   R10
+   \   00002A   3041         RET
+    184          
+    185          /**************************************************************************************************
+    186           * @fn          rpcRsp
+    187           *
+    188           * @brief       This function acts on an RPC response message.
+    189           *
+    190           * input parameters
+    191           *
+    192           * @param       pBuf - Pointer to the RPC response buffer.
+    193           *
+    194           * output parameters
+    195           *
+    196           * None.
+    197           *
+    198           * @return      None.
+    199           **************************************************************************************************
+    200           */
+
+   \                                 In  segment CODE, align 2
+    201          static void rpcRsp(uint8 *pBuf)
+   \                     rpcRsp:
+    202          {
+    203            uint16 event;
+    204          
+    205            switch (*(pBuf+MT_RPC_POS_CMD0) & MT_RPC_SUBSYSTEM_MASK)
+   \   000000   5E4C0100     MOV.B   0x1(R12), R14
+   \   000004   7EF01F00     AND.B   #0x1f, R14
+   \   000008   5E83         SUB.B   #0x1, R14
+   \   00000A   0424         JEQ     ??rpcRsp_2
+   \   00000C   7E800500     SUB.B   #0x5, R14
+   \   000010   0924         JEQ     ??rpcRsp_3
+   \   000012   0C3C         JMP     ??rpcRsp_4
+    206            {
+    207              case MT_RPC_SYS_SYS:
+    208                event = sysRsp(pBuf);
+   \                     ??rpcRsp_2:
+   \   000014   0F43         MOV.W   #0x0, R15
+   \   000016   FC9080000200 CMP.B   #0x80, 0x2(R12)
+   \   00001C   0820         JNE     ??rpcRsp_1
+   \   00001E   3F400080     MOV.W   #0x8000, R15
+    209                break;
+   \   000022   053C         JMP     ??rpcRsp_1
+    210          
+    211              case MT_RPC_SYS_SAPI:
+    212                event = sapiRsp(pBuf);
+   \                     ??rpcRsp_3:
+   \   000024   B012....     CALL    #sapiRsp
+   \   000028   0F4C         MOV.W   R12, R15
+    213                break;
+   \   00002A   013C         JMP     ??rpcRsp_1
+    214          
+    215              default:
+    216                event = ZACCEL_EVT_NONE;
+   \                     ??rpcRsp_4:
+   \   00002C   0F43         MOV.W   #0x0, R15
+    217                break;
+    218            }
+    219          
+    220            zaccelEvtFlags |= event;
+   \                     ??rpcRsp_1:
+   \   00002E   82DF....     BIS.W   R15, &zaccelEvtFlags
+    221          }
+   \   000032   3041         RET
+    222          
+    223          /**************************************************************************************************
+    224           * @fn          sysRsp
+    225           *
+    226           * @brief       This function parses a MT_RPC_SYS_SYS RPC message.
+    227           *
+    228           * input parameters
+    229           *
+    230           * @param       pBuf - Pointer to the RPC response buffer.
+    231           *
+    232           * output parameters
+    233           *
+    234           * None.
+    235           *
+    236           * @return      The corresponding Host event flag, if a recognized response is parsed.
+    237           **************************************************************************************************
+    238           */
+    239          static uint16 sysRsp(uint8 *pBuf)
+    240          {
+    241            uint16 event = ZACCEL_EVT_NONE;
+    242          
+    243            switch (*(pBuf+MT_RPC_POS_CMD1))
+    244            {
+    245              case MT_SYS_RESET_IND:
+    246                event = ZACCEL_SYS_RESET_IND;
+    247                break;
+    248          
+    249              default:
+    250                break;
+    251            }
+    252          
+    253            return event;
+    254          }
+    255          
+    256          /**************************************************************************************************
+    257           * @fn          sapiRsp
+    258           *
+    259           * @brief       This function parses an RPC MT_RPC_SYS_SAPI response message.
+    260           *
+    261           * input parameters
+    262           *
+    263           * @param       pBuf - Pointer to the RPC response buffer.
+    264           *
+    265           * output parameters
+    266           *
+    267           * None.
+    268           *
+    269           * @return      The corresponding Host event flag, if a recognized response is parsed.
+    270           **************************************************************************************************
+    271           */
+
+   \                                 In  segment CODE, align 2
+    272          static uint16 sapiRsp(uint8 *pBuf)
+   \                     sapiRsp:
+    273          {
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0E4C         MOV.W   R12, R14
+    274            uint16 event = ZACCEL_EVT_NONE;
+   \   000004   0A43         MOV.W   #0x0, R10
+    275          
+    276            switch (*(pBuf+MT_RPC_POS_CMD1))
+   \   000006   0F4C         MOV.W   R12, R15
+   \   000008   2F52         ADD.W   #0x4, R15
+   \   00000A   3C500300     ADD.W   #0x3, R12
+   \   00000E   5D4E0200     MOV.B   0x2(R14), R13
+   \   000012   7D800600     SUB.B   #0x6, R13
+   \   000016   1024         JEQ     ??sapiRsp_0
+   \   000018   7D807A00     SUB.B   #0x7a, R13
+   \   00001C   1424         JEQ     ??sapiRsp_1
+   \   00001E   5D83         SUB.B   #0x1, R13
+   \   000020   1724         JEQ     ??sapiRsp_2
+   \   000022   5D83         SUB.B   #0x1, R13
+   \   000024   1F24         JEQ     ??sapiRsp_3
+   \   000026   5D83         SUB.B   #0x1, R13
+   \   000028   2524         JEQ     ??sapiRsp_4
+   \   00002A   5D83         SUB.B   #0x1, R13
+   \   00002C   2924         JEQ     ??sapiRsp_5
+   \   00002E   5D83         SUB.B   #0x1, R13
+   \   000030   2A24         JEQ     ??sapiRsp_6
+   \   000032   6D83         SUB.B   #0x2, R13
+   \   000034   3124         JEQ     ??sapiRsp_7
+   \   000036   543C         JMP     ??sapiRsp_8
+    277            {
+    278              case MT_SAPI_GET_DEV_INFO_REQ:
+    279                zb_GetDeviceInfoConfirm(*(pBuf+MT_RPC_POS_DAT0), (pBuf+MT_RPC_POS_DAT0+1));
+   \                     ??sapiRsp_0:
+   \   000038   0D4F         MOV.W   R15, R13
+   \   00003A   6C4C         MOV.B   @R12, R12
+   \   00003C   B012....     CALL    #zb_GetDeviceInfoConfirm
+    280                event = ZACCEL_DEV_INFO_RSP;
+   \   000040   3A404000     MOV.W   #0x40, R10
+    281                break;
+   \   000044   4D3C         JMP     ??sapiRsp_8
+    282          
+    283              case MT_SAPI_START_CNF:
+    284                zb_StartConfirm(*(pBuf+MT_RPC_POS_DAT0));
+   \                     ??sapiRsp_1:
+   \   000046   6C4C         MOV.B   @R12, R12
+   \   000048   B012....     CALL    #zb_StartConfirm
+    285                event = ZACCEL_START_CNF;
+   \   00004C   1A43         MOV.W   #0x1, R10
+    286                break;
+   \   00004E   483C         JMP     ??sapiRsp_8
+    287          
+    288              case MT_SAPI_BIND_CNF:
+    289                event = BUILD_UINT16(*(pBuf+MT_RPC_POS_DAT0), *(pBuf+MT_RPC_POS_DAT0+1));
+    290                zb_BindConfirm(event, *(pBuf+MT_RPC_POS_DAT0+2));
+   \                     ??sapiRsp_2:
+   \   000050   5D4E0500     MOV.B   0x5(R14), R13
+   \   000054   6C4C         MOV.B   @R12, R12
+   \   000056   6F4F         MOV.B   @R15, R15
+   \   000058   8F10         SWPB    R15
+   \   00005A   0C5F         ADD.W   R15, R12
+   \   00005C   B012....     CALL    #zb_BindConfirm
+    291                event = ZACCEL_BIND_CNF;
+   \   000060   2A43         MOV.W   #0x2, R10
+    292                break;
+   \   000062   3E3C         JMP     ??sapiRsp_8
+    293          
+    294              case MT_SAPI_ALLOW_BIND_CNF:
+    295                event = BUILD_UINT16(*(pBuf+MT_RPC_POS_DAT0), *(pBuf+MT_RPC_POS_DAT0+1));
+    296                zb_AllowBindConfirm(event);
+   \                     ??sapiRsp_3:
+   \   000064   6C4C         MOV.B   @R12, R12
+   \   000066   6F4F         MOV.B   @R15, R15
+   \   000068   8F10         SWPB    R15
+   \   00006A   0C5F         ADD.W   R15, R12
+   \   00006C   B012....     CALL    #zb_AllowBindConfirm
+    297                event = ZACCEL_ALLOW_BIND_CNF;
+   \   000070   2A42         MOV.W   #0x4, R10
+    298                break;
+   \   000072   363C         JMP     ??sapiRsp_8
+    299          
+    300              case MT_SAPI_SEND_DATA_CNF:
+    301                zb_SendDataConfirm(*(pBuf+MT_RPC_POS_DAT0), *(pBuf+MT_RPC_POS_DAT0+1));
+   \                     ??sapiRsp_4:
+   \   000074   6D4F         MOV.B   @R15, R13
+   \   000076   6C4C         MOV.B   @R12, R12
+   \   000078   B012....     CALL    #zb_SendDataConfirm
+    302                event = ZACCEL_SEND_DATA_CNF;
+   \   00007C   3A42         MOV.W   #0x8, R10
+    303                break;
+   \   00007E   303C         JMP     ??sapiRsp_8
+    304          
+    305              case MT_SAPI_READ_CFG_RSP:
+    306                event = ZACCEL_READ_CFG_RSP;
+   \                     ??sapiRsp_5:
+   \   000080   3A401000     MOV.W   #0x10, R10
+    307                break;
+   \   000084   2D3C         JMP     ??sapiRsp_8
+    308          
+    309              case MT_SAPI_FIND_DEV_CNF:
+    310                zb_FindDeviceConfirm(*(pBuf+MT_RPC_POS_DAT0),(pBuf+MT_RPC_POS_DAT0+1),(pBuf+MT_RPC_POS_DAT0+3));
+   \                     ??sapiRsp_6:
+   \   000086   3E500600     ADD.W   #0x6, R14
+   \   00008A   0D4F         MOV.W   R15, R13
+   \   00008C   6C4C         MOV.B   @R12, R12
+   \   00008E   B012....     CALL    #zb_FindDeviceConfirm
+    311                event = ZACCEL_FIND_DEV_CNF;
+   \   000092   3A402000     MOV.W   #0x20, R10
+    312                break;
+   \   000096   243C         JMP     ??sapiRsp_8
+    313          
+    314              case MT_SAPI_RCV_DATA_IND:
+    315                if (!(zaccelEvtFlags & ZACCEL_RCV_DATA_IND))  // Currently limited by 1 incoming data buffer.
+   \                     ??sapiRsp_7:
+   \   000098   C293....     CMP.B   #0x0, &zaccelEvtFlags
+   \   00009C   2138         JL      ??sapiRsp_8
+    316                {
+    317                  event = ZACCEL_RCV_DATA_IND;
+   \   00009E   3A408000     MOV.W   #0x80, R10
+    318          
+    319                  pBuf += MT_RPC_POS_DAT0;
+   \   0000A2   0E4C         MOV.W   R12, R14
+    320                  zaccelDataSrc  = *pBuf++;
+   \   0000A4   7F4E         MOV.B   @R14+, R15
+   \   0000A6   824F....     MOV.W   R15, &zaccelDataSrc
+    321                  zaccelDataSrc += (uint16)(*pBuf++) << 8;
+   \   0000AA   7F4E         MOV.B   @R14+, R15
+   \   0000AC   8F10         SWPB    R15
+   \   0000AE   825F....     ADD.W   R15, &zaccelDataSrc
+    322                  zaccelDataCmd  = *pBuf++;
+   \   0000B2   7F4E         MOV.B   @R14+, R15
+   \   0000B4   824F....     MOV.W   R15, &zaccelDataCmd
+    323                  zaccelDataCmd += (uint16)(*pBuf++) << 8;
+   \   0000B8   7F4E         MOV.B   @R14+, R15
+   \   0000BA   8F10         SWPB    R15
+   \   0000BC   825F....     ADD.W   R15, &zaccelDataCmd
+    324                  zaccelDataLen  = *pBuf++;
+   \   0000C0   7F4E         MOV.B   @R14+, R15
+   \   0000C2   824F....     MOV.W   R15, &zaccelDataLen
+    325                  zaccelDataLen += (uint16)(*pBuf++) << 8;
+   \   0000C6   7F4E         MOV.B   @R14+, R15
+   \   0000C8   8F10         SWPB    R15
+   \   0000CA   825F....     ADD.W   R15, &zaccelDataLen
+    326                  zb_ReceiveDataIndication(zaccelDataSrc, zaccelDataCmd, zaccelDataLen, pBuf);
+   \   0000CE   0F4E         MOV.W   R14, R15
+   \   0000D0   1E42....     MOV.W   &zaccelDataLen, R14
+   \   0000D4   1D42....     MOV.W   &zaccelDataCmd, R13
+   \   0000D8   1C42....     MOV.W   &zaccelDataSrc, R12
+   \   0000DC   B012....     CALL    #zb_ReceiveDataIndication
+    327                }
+    328                break;
+    329          
+    330              default:
+    331                break;
+    332            }
+    333          
+    334            return event;
+   \                     ??sapiRsp_8:
+   \   0000E0   0C4A         MOV.W   R10, R12
+   \   0000E2   3A41         POP.W   R10
+   \   0000E4   3041         RET
+    335          }
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      2   rpcRsp
+        2   -> sapiRsp
+      4   sapiRsp
+        4   -> zb_AllowBindConfirm
+        4   -> zb_BindConfirm
+        4   -> zb_FindDeviceConfirm
+        4   -> zb_GetDeviceInfoConfirm
+        4   -> zb_ReceiveDataIndication
+        4   -> zb_SendDataConfirm
+        4   -> zb_StartConfirm
+      2   zaccelInit
+        2   -> halSlaveReset
+      2   zaccelPoll
+        2   -> mtTx
+        2   -> rpcRsp
+        2   -> spiPOLL
+      4   zaccelRPC
+        4   -> mtTx
+        4   -> rpcRsp
+        4   -> spiAREQ
+        4   -> spiSREQ
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       1  P2IN
+       1  P3OUT
+      52  rpcRsp
+     230  sapiRsp
+       2  zaccelBndAddr
+     128  zaccelDataBuf
+       2  zaccelDataCmd
+       2  zaccelDataLen
+       2  zaccelDataSrc
+       2  zaccelEvtFlags
+       2  zaccelIndFlags
+      40  zaccelInit
+     128  zaccelMsgBuf
+       2  zaccelNwkAddr
+       1  zaccelNwkState
+      34  zaccelPoll
+      44  zaccelRPC
+
+ 
+ 400 bytes in segment CODE
+   2 bytes in segment DATA16_AN
+ 271 bytes in segment DATA16_Z
+ 
+ 400 bytes of CODE memory
+ 271 bytes of DATA memory (+ 2 bytes shared)
+
+Errors: none
+Warnings: none

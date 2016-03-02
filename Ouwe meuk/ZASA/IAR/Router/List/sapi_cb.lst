@@ -1,0 +1,476 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V6.20.1.931/W32 for MSP430           26/Jun/2015  10:51:10
+# Copyright 1996-2014 IAR Systems AB.
+# Standalone license - IAR Embedded Workbench for Texas Instruments MSP430, 8K KickStart Edition 6.20
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430
+#    Source file   =  
+#        C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\common\zaccel\sapi_cb.c
+#    Command line  =  
+#        -f "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\Source\ZASA.cfg" (-DZACCEL_BUF_LEN=128
+#        -DHOST_MT_BAUD=9600 -DHOST_MT_RX_OLD=1
+#        "-DHOST_MT_RX_FULL=(ZACCEL_BUF_LEN-1)" -DZACCEL_NV_CHANLIST=0x00008000
+#        -DZACCEL_NV_PANID=0x0DED)
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\common\zaccel\sapi_cb.c" -D ROUTER -D APP_BLINK_LEDS -lC
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\Router\List\" --remarks --diag_suppress Pe068 -o
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\Router\Obj\" --debug -D__MSP430F2274__
+#        --warnings_are_errors -e --double=32 --clib -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\Source\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\common\zaccel\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\common\mt\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\target\include\" -I
+#        "C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\..\..\target\cc2480\" --reduce_stack_usage -Ohz
+#        --require_prototypes
+#    List file     =  
+#        C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\Router\List\sapi_cb.lst
+#    Object file   =  
+#        C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE
+#        M&M\ZASA\IAR\Router\Obj\sapi_cb.r43
+#
+###############################################################################
+
+C:\Users\-____-\Dropbox\TIV3A-InternetRadio\KASPERRICK\ZIGBEE M&M\common\zaccel\sapi_cb.c
+      1          /**************************************************************************************************
+      2              Filename:       sapi_cb.c
+      3              Revised:        $Date: 2008-02-20 09:47:29 -0800 (Wed, 20 Feb 2008) $
+      4              Revision:       $Revision: 16446 $
+      5          
+      6              Description:
+      7          
+      8              This file contains the main functionality of the Host interface to the Z-Accel SAPI responses.
+      9          
+     10              Copyright 2006-2007 Texas Instruments Incorporated. All rights reserved.
+     11          
+     12              IMPORTANT: Your use of this Software is limited to those specific rights
+     13              granted under the terms of a software license agreement between the user
+     14              who downloaded the software, his/her employer (which must be your employer)
+     15              and Texas Instruments Incorporated (the "License").  You may not use this
+     16              Software unless you agree to abide by the terms of the License. The License
+     17              limits your use, and you acknowledge, that the Software may not be modified,
+     18              copied or distributed unless embedded on a Texas Instruments microcontroller
+     19              or used solely and exclusively in conjunction with a Texas Instruments radio
+     20              frequency transceiver, which is integrated into your product.  Other than for
+     21              the foregoing purpose, you may not use, reproduce, copy, prepare derivative
+     22              works of, modify, distribute, perform, display or sell this Software and/or
+     23              its documentation for any purpose.
+     24          
+     25              YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
+     26              PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+     27              INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE, 
+     28              NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
+     29              TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
+     30              NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
+     31              LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES
+     32              INCLUDING BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE
+     33              OR CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT
+     34              OF SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
+     35              (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
+     36          
+     37              Should you have any questions regarding your right to use this Software,
+     38              contact Texas Instruments Incorporated at www.TI.com.
+     39          **************************************************************************************************/
+     40          
+     41          /* ------------------------------------------------------------------------------------------------
+     42           *                                          Includes
+     43           * ------------------------------------------------------------------------------------------------
+     44           */
+     45          
+     46          #include <string.h>
+     47          #include "zaccel.h"
+     48          #include "sapi.h"
+     49          
+     50          /* ------------------------------------------------------------------------------------------------
+     51           *                                           Macros
+     52           * ------------------------------------------------------------------------------------------------
+     53           */
+     54          
+     55          /* ------------------------------------------------------------------------------------------------
+     56           *                                           Constants
+     57           * ------------------------------------------------------------------------------------------------
+     58           */
+     59          
+     60          /* ------------------------------------------------------------------------------------------------
+     61           *                                           Local Variables
+     62           * ------------------------------------------------------------------------------------------------
+     63           */
+     64          
+     65          /* ------------------------------------------------------------------------------------------------
+     66           *                                           Global Variables
+     67           * ------------------------------------------------------------------------------------------------
+     68           */
+     69          
+     70          /* ------------------------------------------------------------------------------------------------
+     71           *                                           Local Variables
+     72           * ------------------------------------------------------------------------------------------------
+     73           */
+     74          
+     75          /**************************************************************************************************
+     76           * @fn          zb_GetDeviceInfoConfirm
+     77           *
+     78           * @brief       The zb_GetDeviceInfoConfirm function returns the Device Information Property.
+     79           *
+     80           * input parameters
+     81           *
+     82           * @param       param - The identifier for the device information
+     83           *              pValue - A buffer to hold the device information
+     84           *
+     85           * output parameters
+     86           *
+     87           * None.
+     88           *
+     89           * @return      None.
+     90           **************************************************************************************************
+     91           */
+
+   \                                 In  segment CODE, align 2
+     92          void zb_GetDeviceInfoConfirm(uint8 param, void *pValue)
+   \                     zb_GetDeviceInfoConfirm:
+     93          {
+     94            switch (param)
+   \   000000   4C83         SUB.B   #0x0, R12
+   \   000002   0324         JEQ     ??zb_GetDeviceInfoConfirm_0
+   \   000004   6C83         SUB.B   #0x2, R12
+   \   000006   0424         JEQ     ??zb_GetDeviceInfoConfirm_1
+   \   000008   3041         RET
+     95            {
+     96              case ZB_INFO_DEV_STATE:
+     97                zaccelNwkState = *(devStates_t *)pValue;
+   \                     ??zb_GetDeviceInfoConfirm_0:
+   \   00000A   E24D....     MOV.B   @R13, &zaccelNwkState
+     98                break;
+   \   00000E   3041         RET
+     99            
+    100              case ZB_INFO_IEEE_ADDR:
+    101                break;
+    102            
+    103              case ZB_INFO_SHORT_ADDR:
+    104                zaccelNwkAddr = BUILD_UINT16(*((uint8 *)pValue), (*((uint8 *)pValue+1)) << 8);
+   \                     ??zb_GetDeviceInfoConfirm_1:
+   \   000010   6F4D         MOV.B   @R13, R15
+   \   000012   824F....     MOV.W   R15, &zaccelNwkAddr
+    105                break;
+    106            
+    107              case ZB_INFO_PARENT_SHORT_ADDR:
+    108                break;
+    109            
+    110              case ZB_INFO_PARENT_IEEE_ADDR:
+    111                break;
+    112            
+    113              case ZB_INFO_CHANNEL:
+    114                break;
+    115            
+    116              case ZB_INFO_PAN_ID:
+    117                break;
+    118            
+    119              case ZB_INFO_EXT_PAN_ID:
+    120                break;
+    121            }
+    122          }
+   \   000016   3041         RET
+    123          
+    124          /**************************************************************************************************
+    125           * @fn          zb_StartConfirm
+    126           *
+    127           * @brief       The zb_StartConfirm callback is called by the ZigBee stack
+    128           *              after a start request operation completes
+    129           *
+    130           * input parameters
+    131           *
+    132           * @param       status - The status of the start operation.  Status of ZB_SUCCESS indicates the 
+    133           *                       start operation completed successfully. Else the status is an error code.
+    134           *
+    135           * output parameters
+    136           *
+    137           * None.
+    138           *
+    139           * @return      None.
+    140           **************************************************************************************************
+    141           */
+
+   \                                 In  segment CODE, align 2
+    142          void zb_StartConfirm(uint8 status)
+   \                     zb_StartConfirm:
+    143          {
+    144            // If not started sucessful restart again.
+    145            if (status != ZB_SUCCESS)
+   \   000000   4C93         CMP.B   #0x0, R12
+   \   000002   0224         JEQ     ??zb_StartConfirm_0
+    146            {
+    147              zb_StartRequest();
+   \   000004   B012....     CALL    #zb_StartRequest
+    148            }
+    149          }
+   \                     ??zb_StartConfirm_0:
+   \   000008   3041         RET
+    150          
+    151          /**************************************************************************************************
+    152           * @fn          zb_BindConfirm
+    153           *
+    154           * @brief       The zb_BindConfirm callback is called by the ZigBee stack
+    155           *              after a bind operation completes.
+    156           *
+    157           * input parameters
+    158           *
+    159           * @param       commandId - The command ID of the binding being confirmed.
+    160           * @param       status - The status of the bind operation.
+    161           *
+    162           * output parameters
+    163           *
+    164           * None.
+    165           *
+    166           * @return      None.
+    167           **************************************************************************************************
+    168           */
+
+   \                                 In  segment CODE, align 2, keep-with-next
+   \                     ?Subroutine0:
+   \   000000   824F....     MOV.W   R15, &zaccelIndFlags
+   \   000004   3041         RET
+
+   \                                 In  segment CODE, align 2
+    169          void zb_BindConfirm(uint16 commandId, uint8 status)
+   \                     zb_BindConfirm:
+    170          {
+    171            (void)commandId;
+    172          
+    173            if (status == ZB_SUCCESS)
+   \   000000   1F42....     MOV.W   &zaccelIndFlags, R15
+   \   000004   4D93         CMP.B   #0x0, R13
+   \   000006   0220         JNE     ??zb_BindConfirm_0
+    174            {
+    175              zaccelIndFlags |= ZACCEL_BIND_SUCCESS;
+   \   000008   1FD3         BIS.W   #0x1, R15
+   \   00000A   013C         JMP     ??zb_BindConfirm_1
+    176            }
+    177            else
+    178            {
+    179              zaccelIndFlags &= ~ZACCEL_BIND_SUCCESS;
+   \                     ??zb_BindConfirm_0:
+   \   00000C   1FC3         BIC.W   #0x1, R15
+    180            }
+   \                     ??zb_BindConfirm_1:
+   \   00000E   ....         JMP     ?Subroutine0
+    181          }
+    182          
+    183          /**************************************************************************************************
+    184           * @fn          zb_AllowBindConfirm
+    185           *
+    186           * @brief       Indicates when another device attempted to bind to this device
+    187           * 
+    188           *
+    189           * input parameters
+    190           *
+    191           * @param       source - the address of the source device that requested a binding with this device.
+    192           *
+    193           * output parameters
+    194           *
+    195           * None.
+    196           *
+    197           * @return      None.
+    198           **************************************************************************************************
+    199           */
+
+   \                                 In  segment CODE, align 2, keep-with-next
+    200          void zb_AllowBindConfirm(uint16 source)
+   \                     zb_AllowBindConfirm:
+    201          {
+    202            zaccelBndAddr = source;
+   \   000000   824C....     MOV.W   R12, &zaccelBndAddr
+    203          }
+   \   000004   3041         RET
+    204          
+    205          /**************************************************************************************************
+    206           * @fn          zb_SendDataConfirm
+    207           *
+    208           * @brief       The zb_SendDataConfirm callback function is called by the
+    209           *              ZigBee after a send data operation completes
+    210           *
+    211           * input parameters
+    212           *
+    213           * @param       handle - The handle identifying the data transmission.
+    214           * @param       status - The status of the operation.
+    215           *
+    216           * output parameters
+    217           *
+    218           * None.
+    219           *
+    220           * @return      None.
+    221           **************************************************************************************************
+    222           */
+
+   \                                 In  segment CODE, align 2, keep-with-next
+    223          void zb_SendDataConfirm(uint8 handle, uint8 status)
+   \                     zb_SendDataConfirm:
+    224          {
+    225            (void)handle;
+    226          
+    227            if (status == ZB_SUCCESS)
+   \   000000   1F42....     MOV.W   &zaccelIndFlags, R15
+   \   000004   4D93         CMP.B   #0x0, R13
+   \   000006   0220         JNE     ??zb_SendDataConfirm_0
+    228            {
+    229              zaccelIndFlags |= ZACCEL_SEND_SUCCESS;
+   \   000008   2FD3         BIS.W   #0x2, R15
+   \   00000A   013C         JMP     ??zb_SendDataConfirm_1
+    230            }
+    231            else
+    232            {
+    233              zaccelIndFlags &= ~ZACCEL_SEND_SUCCESS;
+   \                     ??zb_SendDataConfirm_0:
+   \   00000C   2FC3         BIC.W   #0x2, R15
+    234            }
+   \                     ??zb_SendDataConfirm_1:
+   \   00000E                REQUIRE ?Subroutine0
+   \   00000E                // Fall through to label ?Subroutine0
+    235          }
+    236          
+    237          /**************************************************************************************************
+    238           * @fn          zb_FindDeviceConfirm
+    239           *
+    240           * @brief       Callback function called by the ZigBee stack when a find device operation completes.
+    241           *
+    242           * input parameters
+    243           *
+    244           * @param       searchType - The search type that was requested for this search operation.
+    245           * @param       searchKey - The searchKey parameter contains information unique to the device being
+    246           *                          discovered. The searchKey parameter is dependant on the searchType.
+    247           *                          The content of the searchKey for each searchType follows:
+    248           *                          - ZB_IEEE_SEARCH - The searchKey is the 64-bit IEEE address
+    249           *                            of the device being discovered.
+    250           * @param       result - A pointer to data containing the result of the search.
+    251           *                       If the search type was ZB_IEEE_SEARCH, then this is a 16-bit address
+    252           *                       of the device that matched the search.
+    253           *
+    254           * output parameters
+    255           *
+    256           * None.
+    257           *
+    258           * @return      None.
+    259           **************************************************************************************************
+    260           */
+
+   \                                 In  segment CODE, align 2
+    261          void zb_FindDeviceConfirm(uint8 searchType, uint8 *searchKey, uint8 *result)
+   \                     zb_FindDeviceConfirm:
+    262          {
+    263            (void)searchType;  // Currently only supports IEEE Addr Search.
+    264            (void)searchKey;
+    265            (void)result;
+    266          }
+   \   000000   3041         RET
+    267          
+    268          /**************************************************************************************************
+    269           * @fn          zb_ReceiveDataIndication
+    270           *
+    271           * @brief       The zb_ReceiveDataIndication callback function is called
+    272           *              asynchronously by the ZigBee stack to notify the application
+    273           *              when data is received from a peer device.
+    274           *
+    275           * input parameters
+    276           *
+    277           * @param       source - The short address of the peer device that sent the data
+    278           * @param       command - The commandId associated with the data
+    279           * @param       len - The number of bytes in the pData parameter
+    280           * @param       pData - The data sent by the peer device
+    281           *
+    282           * output parameters
+    283           *
+    284           * None.
+    285           *
+    286           * @return      None.
+    287           **************************************************************************************************
+    288           */
+
+   \                                 In  segment CODE, align 2
+    289          void zb_ReceiveDataIndication(uint16 source, uint16 command, uint16 len, uint8 *pData)
+   \                     zb_ReceiveDataIndication:
+    290          {
+    291            uint8 cnt;
+    292          
+    293            zaccelDataSrc = source;
+   \   000000   824C....     MOV.W   R12, &zaccelDataSrc
+    294            zaccelDataCmd = command;
+   \   000004   824D....     MOV.W   R13, &zaccelDataCmd
+    295          
+    296            if (len > ZACCEL_BUF_LEN)  // If SAPI sent more than 255 bytes, we cannot currently handle.
+   \   000008   3E908100     CMP.W   #0x81, R14
+   \   00000C   0228         JNC     ??zb_ReceiveDataIndication_1
+    297            {
+    298              zaccelDataLen = ZACCEL_BUF_LEN;
+   \   00000E   3E408000     MOV.W   #0x80, R14
+    299            }
+    300            else
+    301            {
+    302              zaccelDataLen = len;
+   \                     ??zb_ReceiveDataIndication_1:
+   \   000012   824E....     MOV.W   R14, &zaccelDataLen
+    303            }
+    304          
+    305            for (cnt = 0; cnt < zaccelDataLen; cnt++)
+   \   000016   4E43         MOV.B   #0x0, R14
+   \   000018   033C         JMP     ??zb_ReceiveDataIndication_2
+    306            {
+    307              zaccelDataBuf[cnt] = *pData++;
+   \                     ??zb_ReceiveDataIndication_0:
+   \   00001A   FE4F....     MOV.B   @R15+, zaccelDataBuf(R14)
+    308            }
+   \   00001E   5E53         ADD.B   #0x1, R14
+   \                     ??zb_ReceiveDataIndication_2:
+   \   000020   1E92....     CMP.W   &zaccelDataLen, R14
+   \   000024   FA2B         JNC     ??zb_ReceiveDataIndication_0
+    309          }
+   \   000026   3041         RET
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      2   zb_AllowBindConfirm
+      2   zb_BindConfirm
+      2   zb_FindDeviceConfirm
+      2   zb_GetDeviceInfoConfirm
+      2   zb_ReceiveDataIndication
+      2   zb_SendDataConfirm
+      2   zb_StartConfirm
+        2   -> zb_StartRequest
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       6  ?Subroutine0
+       6  zb_AllowBindConfirm
+      16  zb_BindConfirm
+       2  zb_FindDeviceConfirm
+      24  zb_GetDeviceInfoConfirm
+      40  zb_ReceiveDataIndication
+      14  zb_SendDataConfirm
+      10  zb_StartConfirm
+
+ 
+ 118 bytes in segment CODE
+ 
+ 118 bytes of CODE memory
+
+Errors: none
+Warnings: none

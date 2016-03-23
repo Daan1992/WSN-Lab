@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# IAR C/C++ Compiler V9.20.1.2476 for 8051                09/Mar/2016  15:07:09
+# IAR C/C++ Compiler V9.20.1.2476 for 8051                23/Mar/2016  15:19:28
 # Copyright 2004-2015 IAR Systems AB.
 # Standalone license - IAR Embedded Workbench for 8051
 #
@@ -21,7 +21,7 @@
 #        -DMAC_CFG_TX_DATA_MAX=5 -DMAC_CFG_TX_MAX=8 -DMAC_CFG_RX_MAX=5
 #        -DRTR_NWK) -f "C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh
 #        1.0.0\Projects\zstack\Samples\DemoApp\CC2530DB\..\..\..\Tools\CC2530DB\f8wConfig.cfg"
-#        (-DZIGBEEPRO -DSECURE=0 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
+#        (-DZIGBEEPRO -DSECURE=1 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
 #        -DDEFAULT_CHANLIST=0x02000000 -DDEFAULT_CHANLIST=0x00000800
 #        -DZDAPP_CONFIG_PAN_ID=0x1AAD -DNWK_START_DELAY=100
 #        -DEXTENDED_JOINING_RANDOM_MASK=0x007F -DBEACON_REQUEST_DELAY=100
@@ -4065,20 +4065,35 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
    1403            {
    1404              if ( ( ( ZG_BUILD_COORDINATOR_TYPE ) && ( ZG_DEVICE_COORDINATOR_TYPE ) )
    1405                   || ( ( ZG_BUILD_RTR_TYPE ) && APSME_IsDistributedSecurity() ) )
+   \   000007   90....       MOV     DPTR,#zgDeviceLogicalType
+   \   00000A   E0           MOVX    A,@DPTR
+   \   00000B   6006         JZ      ??ZDSecMgrInit_0
+   \   00000D                ; Setup parameters for call to function APSME_IsDistributedSecurity
+   \   00000D   12....       LCALL   `??APSME_IsDistributedSecurity::?relay`; Banked call to: APSME_IsDistributedSecurity
+   \   000010   E9           MOV     A,R1
+   \   000011   600C         JZ      ??ZDSecMgrInit_1
    1406              {
    1407                // setup joining permissions
    1408                ZDSecMgrPermitJoiningEnabled = TRUE;
+   \                     ??ZDSecMgrInit_0:
+   \   000013   90....       MOV     DPTR,#ZDSecMgrPermitJoiningEnabled
+   \   000016   7401         MOV     A,#0x1
+   \   000018   F0           MOVX    @DPTR,A
    1409                ZDSecMgrPermitJoiningTimed   = FALSE;
+   \   000019   90....       MOV     DPTR,#ZDSecMgrPermitJoiningTimed
+   \   00001C   7400         MOV     A,#0x0
+   \   00001E   F0           MOVX    @DPTR,A
    1410              }
    1411            }
    1412          
    1413            // configure security based on security mode and type of device
    1414            ZDSecMgrConfig();
-   \   000007                ; Setup parameters for call to function ZDSecMgrConfig
-   \   000007   12....       LCALL   `??ZDSecMgrConfig::?relay`; Banked call to: ZDSecMgrConfig
+   \                     ??ZDSecMgrInit_1:
+   \   00001F                ; Setup parameters for call to function ZDSecMgrConfig
+   \   00001F   12....       LCALL   `??ZDSecMgrConfig::?relay`; Banked call to: ZDSecMgrConfig
    1415          }
-   \   00000A   7F01         MOV     R7,#0x1
-   \   00000C   02....       LJMP    ?BANKED_LEAVE_XDATA
+   \   000022   7F01         MOV     R7,#0x1
+   \   000024   02....       LJMP    ?BANKED_LEAVE_XDATA
    1416          
    1417          /******************************************************************************
    1418           * @fn          ZDSecMgrConfig
@@ -4101,6 +4116,8 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
    1428            if ( ZG_SECURE_ENABLED )
    1429            {
    1430              SSP_Init();
+   \   000004                ; Setup parameters for call to function SSP_Init
+   \   000004   12....       LCALL   `??SSP_Init::?relay` ; Banked call to: SSP_Init
    1431          
    1432              if ( ZG_CHECK_SECURITY_MODE == ZG_SECURITY_SE_STANDARD )
    1433              {
@@ -4123,19 +4140,40 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
    1450              else // ( ZG_CHECK_SECURITY_MODE == ZG_SECURITY_RESIDENTIAL )
    1451              {
    1452                if ( ( ZG_BUILD_COORDINATOR_TYPE ) && ( ZG_DEVICE_COORDINATOR_TYPE ) )
+   \   000007   90....       MOV     DPTR,#zgDeviceLogicalType
+   \   00000A   E0           MOVX    A,@DPTR
+   \   00000B   7005         JNZ     ??ZDSecMgrConfig_0
    1453                {
    1454                  // RESIDENTIAL MODE - COORDINATOR DEVICE
    1455                  APSME_SecurityRM_CD();
+   \   00000D                ; Setup parameters for call to function APSME_SecurityRM_CD
+   \   00000D   12....       LCALL   `??APSME_SecurityRM_CD::?relay`; Banked call to: APSME_SecurityRM_CD
+   \   000010   8016         SJMP    ??ZDSecMgrConfig_1
    1456                }
    1457                else if ( ZSTACK_ROUTER_BUILD )
+   \                     ??ZDSecMgrConfig_0:
+   \   000012   90....       MOV     DPTR,#zgDeviceLogicalType
+   \   000015   E0           MOVX    A,@DPTR
+   \   000016   6008         JZ      ??ZDSecMgrConfig_2
+   \   000018   90....       MOV     DPTR,#zgDeviceLogicalType
+   \   00001B   E0           MOVX    A,@DPTR
+   \   00001C   6401         XRL     A,#0x1
+   \   00001E   7005         JNZ     ??ZDSecMgrConfig_3
    1458                {
    1459                  // RESIDENTIAL MODE - ROUTER DEVICE
    1460                  APSME_SecurityRM_RD();
+   \                     ??ZDSecMgrConfig_2:
+   \   000020                ; Setup parameters for call to function APSME_SecurityRM_RD
+   \   000020   12....       LCALL   `??APSME_SecurityRM_RD::?relay`; Banked call to: APSME_SecurityRM_RD
+   \   000023   8003         SJMP    ??ZDSecMgrConfig_1
    1461                }
    1462                else
    1463                {
    1464                  // RESIDENTIAL MODE - END DEVICE
    1465                  APSME_SecurityRM_ED();
+   \                     ??ZDSecMgrConfig_3:
+   \   000025                ; Setup parameters for call to function APSME_SecurityRM_ED
+   \   000025   12....       LCALL   `??APSME_SecurityRM_ED::?relay`; Banked call to: APSME_SecurityRM_ED
    1466                }
    1467              }
    1468            }
@@ -4143,13 +4181,12 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
    1470            {
    1471              // NO SECURITY
    1472              APSME_SecurityNM();
-   \   000004                ; Setup parameters for call to function APSME_SecurityNM
-   \   000004   12....       LCALL   `??APSME_SecurityNM::?relay`; Banked call to: APSME_SecurityNM
    1473            }
    1474          }
-   \   000007   D083         POP     DPH
-   \   000009   D082         POP     DPL
-   \   00000B   02....       LJMP    ?BRET
+   \                     ??ZDSecMgrConfig_1:
+   \   000028   D083         POP     DPH
+   \   00002A   D082         POP     DPL
+   \   00002C   02....       LJMP    ?BRET
    1475          
    1476          /******************************************************************************
    1477           * @fn          ZDSecMgrPermitJoining
@@ -10104,7 +10141,10 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
       1     12   ZDSecMgrAuthenticationSet
         0     12   -> ZDSecMgrEntryLookupExt
       2      9   ZDSecMgrConfig
-        2      0   -> APSME_SecurityNM
+        2      0   -> APSME_SecurityRM_CD
+        2      0   -> APSME_SecurityRM_ED
+        2      0   -> APSME_SecurityRM_RD
+        2      0   -> SSP_Init
       0     49   ZDSecMgrDeviceJoin
         0     29   -> ZDSecMgrAddrClear
         0     31   -> ZDSecMgrAddrStore
@@ -10159,6 +10199,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
         0     26   -> AddrMgrEntryUpdate
         0     26   -> AddrMgrExtAddrSet
       0      9   ZDSecMgrInit
+        0      9   -> APSME_IsDistributedSecurity
         0      9   -> ZDSecMgrConfig
       0     16   ZDSecMgrInitNV
         0     14   -> osal_nv_item_init
@@ -10303,7 +10344,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
        6  ZDSecMgrAuthenticationCheck::?relay
       71  ZDSecMgrAuthenticationSet
        6  ZDSecMgrAuthenticationSet::?relay
-      14  ZDSecMgrConfig
+      47  ZDSecMgrConfig
        6  ZDSecMgrConfig::?relay
      284  ZDSecMgrDeviceJoin
        6  ZDSecMgrDeviceJoin::?relay
@@ -10342,7 +10383,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
        6  ZDSecMgrExtAddrLookup::?relay
      141  ZDSecMgrExtAddrStore
        6  ZDSecMgrExtAddrStore::?relay
-      15  ZDSecMgrInit
+      39  ZDSecMgrInit
        6  ZDSecMgrInit::?relay
      138  ZDSecMgrInitNV
        6  ZDSecMgrInitNV::?relay
@@ -10397,14 +10438,14 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
        4  __Constant_1
 
  
- 9 534 bytes in segment BANKED_CODE
+ 9 591 bytes in segment BANKED_CODE
    378 bytes in segment BANK_RELAYS
      1 byte  in segment XDATA_I
      1 byte  in segment XDATA_ID
     12 bytes in segment XDATA_ROM_C
     81 bytes in segment XDATA_Z
  
- 9 913 bytes of CODE  memory
+ 9 970 bytes of CODE  memory
      8 bytes of CONST memory (+ 4 bytes shared)
     82 bytes of XDATA memory
 

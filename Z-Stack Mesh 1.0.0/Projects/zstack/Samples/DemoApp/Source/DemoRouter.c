@@ -112,13 +112,18 @@ static uint16 parentShortAddr;
  */
 
 // Inputs and Outputs for Sensor device
-#define NUM_OUT_CMD_SENSOR        1
-#define NUM_IN_CMD_SENSOR         0
+#define NUM_OUT_CMD        1
+#define NUM_IN_CMD         1
 
 // List of output and input commands for Sensor device
-const cId_t zb_OutCmdList[NUM_OUT_CMD_SENSOR] =
+const cId_t zb_OutCmdList[NUM_OUT_CMD] =
 {
-  SENSOR_REPORT_CMD_ID
+  ROUTER_REPORT_CMD_ID
+};
+
+const cId_t zb_InCmdList[NUM_IN_CMD] =
+{
+  BUTTON_REPORT_CMD_ID,
 };
 
 // Define SimpleDescriptor for Sensor device
@@ -126,14 +131,15 @@ const SimpleDescriptionFormat_t zb_SimpleDesc =
 {
   MY_ENDPOINT_ID,             //  Endpoint
   MY_PROFILE_ID,              //  Profile ID
-  DEV_ID_SENSOR,              //  Device ID
+  DEV_ID_ROUTER,              //  Device ID
   DEVICE_VERSION_SENSOR,      //  Device Version
   0,                          //  Reserved
-  NUM_IN_CMD_SENSOR,          //  Number of Input Commands
-  (cId_t *) NULL,             //  Input Command List
-  NUM_OUT_CMD_SENSOR,         //  Number of Output Commands
+  NUM_IN_CMD,                 //  Number of Input Commands
+  (cId_t *) zb_InCmdList,     //  Input Command List
+  NUM_OUT_CMD,                //  Number of Output Commands
   (cId_t *) zb_OutCmdList     //  Output Command List
 };
+
 
 
 /******************************************************************************
@@ -191,7 +197,7 @@ void zb_HandleOsalEvent( uint16 event )
 
     appState = APP_BIND;
     // Find and bind to a collector device
-    zb_BindDevice( TRUE, SENSOR_REPORT_CMD_ID, (uint8 *)NULL );
+    zb_BindDevice( TRUE, ROUTER_REPORT_CMD_ID, (uint8 *)NULL );
   }
 }
 
@@ -241,7 +247,7 @@ void zb_HandleKeys( uint8 shift, uint8 keys )
     if ( keys & HAL_KEY_SW_2 )
     {
       MCU_IO_DIR_OUTPUT(LED_PORT, LED_PIN);
-      MCU_IO_SET_HIGH(LED_PORT, LED_PIN);
+      MCU_IO_SET(LED_PORT, LED_PIN, !MCU_IO_GET(LED_PORT, LED_PIN));
     }
     if ( keys & HAL_KEY_SW_3 )
     {
@@ -281,9 +287,9 @@ void zb_StartConfirm( uint8 status )
     // Store parent short address
     zb_GetDeviceInfo(ZB_INFO_PARENT_SHORT_ADDR, &parentShortAddr);
 
-    // Turn OFF Allow Bind mode infinitly
-    zb_AllowBind( 0x00 );
-    HalLedSet( HAL_LED_2, HAL_LED_MODE_OFF );
+    // Turn ON Allow Bind mode infinitly
+    zb_AllowBind( 0xFF );
+    HalLedSet( HAL_LED_2, HAL_LED_MODE_ON );
   }
   else
   {
@@ -317,7 +323,7 @@ void zb_SendDataConfirm( uint8 handle, uint8 status )
        reportState = TRUE;
 
        // Delete previous binding
-       zb_BindDevice( FALSE, SENSOR_REPORT_CMD_ID, (uint8 *)NULL );
+       zb_BindDevice( FALSE, ROUTER_REPORT_CMD_ID, (uint8 *)NULL );
 
       // Try to bind a new gateway
        osal_start_timerEx( sapi_TaskID, MY_FIND_COLLECTOR_EVT, myBindRetryDelay );
@@ -481,7 +487,7 @@ static void sendReport(void)
   }
   // Destination address 0xFFFE: Destination address is sent to previously
   // established binding for the commandId.
-  zb_SendDataRequest( 0xFFFE, SENSOR_REPORT_CMD_ID, SENSOR_REPORT_LENGTH, pData, 0, txOptions, 0 );
+  zb_SendDataRequest( 0xFFFE, ROUTER_REPORT_CMD_ID, SENSOR_REPORT_LENGTH, pData, 0, txOptions, 0 );
 }
 
 /******************************************************************************

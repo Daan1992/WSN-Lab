@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// IAR C/C++ Compiler V9.20.1.2476 for 8051               09/Mar/2016  15:48:06
+// IAR C/C++ Compiler V9.20.1.2476 for 8051               23/Mar/2016  15:19:28
 // Copyright 2004-2015 IAR Systems AB.
 // Standalone license - IAR Embedded Workbench for 8051
 //
@@ -21,7 +21,7 @@
 //        -DMAC_CFG_TX_DATA_MAX=5 -DMAC_CFG_TX_MAX=8 -DMAC_CFG_RX_MAX=5
 //        -DRTR_NWK) -f "C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh
 //        1.0.0\Projects\zstack\Samples\DemoApp\CC2530DB\..\..\..\Tools\CC2530DB\f8wConfig.cfg"
-//        (-DZIGBEEPRO -DSECURE=0 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
+//        (-DZIGBEEPRO -DSECURE=1 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
 //        -DDEFAULT_CHANLIST=0x02000000 -DDEFAULT_CHANLIST=0x00000800
 //        -DZDAPP_CONFIG_PAN_ID=0x1AAD -DNWK_START_DELAY=100
 //        -DEXTENDED_JOINING_RANDOM_MASK=0x007F -DBEACON_REQUEST_DELAY=100
@@ -721,6 +721,8 @@ ZDP_SimpleDescMsg   SYMBOL "ZDP_SimpleDescMsg"
 `??ZDP_SimpleDescMsg::?relay` SYMBOL "?relay", ZDP_SimpleDescMsg
 ZDP_UserDescRsp     SYMBOL "ZDP_UserDescRsp"
 `??ZDP_UserDescRsp::?relay` SYMBOL "?relay", ZDP_UserDescRsp
+ZDSecMgrPermitJoining SYMBOL "ZDSecMgrPermitJoining"
+`??ZDSecMgrPermitJoining::?relay` SYMBOL "?relay", ZDSecMgrPermitJoining
 ZMacSetReq          SYMBOL "ZMacSetReq"
 `??ZMacSetReq::?relay` SYMBOL "?relay", ZMacSetReq
 afEndPoints         SYMBOL "afEndPoints"
@@ -962,6 +964,8 @@ ZDO_UpdateNwkStatus SYMBOL "ZDO_UpdateNwkStatus"
         FUNCTION `??ZDP_SimpleDescMsg::?relay`,00H
         EXTERN `??ZDP_UserDescRsp::?relay`
         FUNCTION `??ZDP_UserDescRsp::?relay`,00H
+        EXTERN `??ZDSecMgrPermitJoining::?relay`
+        FUNCTION `??ZDSecMgrPermitJoining::?relay`,00H
         EXTERN `??ZMacSetReq::?relay`
         FUNCTION `??ZMacSetReq::?relay`,00H
         EXTERN `??afEndPoints::?relay`
@@ -1369,6 +1373,13 @@ ZDO_UpdateNwkStatus SYMBOL "ZDO_UpdateNwkStatus"
         ARGFRAME ISTACK, 0, STACK
         ARGFRAME PSTACK, 0, STACK
         ARGFRAME XSTACK, 32, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        EXTERN ZDSecMgrPermitJoining
+        FUNCTION ZDSecMgrPermitJoining,0202H
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 13, STACK
         ARGFRAME IOVERLAY, 0, STATIC
         ARGFRAME DOVERLAY, 0, STATIC
         EXTERN ZMacSetReq
@@ -10730,6 +10741,17 @@ ZDO_ProcessMgmtPermitJoinReq:
         ARGFRAME XSTACK, 13, STACK
         ARGFRAME IOVERLAY, 0, STATIC
         ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL ZDO_ProcessMgmtPermitJoinReq, ZDSecMgrPermitJoining
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 13, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 13, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
         FUNCALL ZDO_ProcessMgmtPermitJoinReq, ZDP_SendData
         LOCFRAME ISTACK, 0, STACK
         LOCFRAME PSTACK, 0, STACK
@@ -10822,15 +10844,26 @@ ZDO_ProcessMgmtPermitJoinReq:
 // 1873 
 // 1874   // Handle the Trust Center Significance
 // 1875   if ( ZG_SECURE_ENABLED && ZG_BUILD_COORDINATOR_TYPE && ZG_DEVICE_COORDINATOR_TYPE )
+        MOV     DPTR,#zgDeviceLogicalType
+        MOVX    A,@DPTR
+        JNZ     ??ZDO_ProcessMgmtPermitJoinReq_0
 // 1876   {
 // 1877     if ( tcsig == TRUE )
+        MOV     A,#0x1
+        XRL     A,?V1
+        JNZ     ??ZDO_ProcessMgmtPermitJoinReq_0
 // 1878     {
 // 1879       ZDSecMgrPermitJoining( duration );
+        ; Setup parameters for call to function ZDSecMgrPermitJoining
+        MOV     R1,?V0
+        LCALL   `??ZDSecMgrPermitJoining::?relay`; Banked call to: ZDSecMgrPermitJoining
+        MOV     A,R1
 // 1880     }
 // 1881   }
 // 1882 
 // 1883   // Send a response if unicast
 // 1884   if ( !inMsg->wasBroadcast )
+??ZDO_ProcessMgmtPermitJoinReq_0:
         MOV     A,R6
         ADD     A,#0xb
         MOV     DPL,A
@@ -10838,7 +10871,7 @@ ZDO_ProcessMgmtPermitJoinReq:
         ADDC    A,R7
         MOV     DPH,A
         MOVX    A,@DPTR
-        JNZ     ??ZDO_ProcessMgmtPermitJoinReq_0
+        JNZ     ??ZDO_ProcessMgmtPermitJoinReq_1
 // 1885   {
 // 1886     ZDP_MgmtPermitJoinRsp( inMsg->TransSeq, &(inMsg->srcAddr), stat, false );
         ; Setup parameters for call to function ZDP_SendData
@@ -10878,7 +10911,7 @@ ZDO_ProcessMgmtPermitJoinReq:
         MOV     A,R1
 // 1887   }
 // 1888 }
-??ZDO_ProcessMgmtPermitJoinReq_0:
+??ZDO_ProcessMgmtPermitJoinReq_1:
         MOV     A,#0x1
         LCALL   ?DEALLOC_XSTACK8
           CFI CFA_XSP16 add(XSP16, 12)
@@ -22718,14 +22751,14 @@ __Constant_3e8:
 // 3399 /*********************************************************************
 // 3400 *********************************************************************/
 // 
-// 19 369 bytes in segment BANKED_CODE
+// 19 387 bytes in segment BANKED_CODE
 //    330 bytes in segment BANK_RELAYS
 //      2 bytes in segment XDATA_I
 //      2 bytes in segment XDATA_ID
 //      4 bytes in segment XDATA_ROM_C
 //     62 bytes in segment XDATA_Z
 // 
-// 19 701 bytes of CODE  memory
+// 19 719 bytes of CODE  memory
 //      0 bytes of CONST memory (+ 4 bytes shared)
 //     64 bytes of XDATA memory
 //

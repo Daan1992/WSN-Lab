@@ -117,7 +117,7 @@ uint16 timeSinceLastSent = 60000;
 // List of output and input commands for Sensor device
 const cId_t zb_OutCmdList[NUM_OUT_CMD_SENSOR] =
 {
-  SENSOR_REPORT_CMD_ID
+  BUTTON_REPORT_CMD_ID
 };
 
 // Define SimpleDescriptor for Sensor device
@@ -125,7 +125,7 @@ const SimpleDescriptionFormat_t zb_SimpleDesc =
 {
   MY_ENDPOINT_ID,             //  Endpoint
   MY_PROFILE_ID,              //  Profile ID
-  DEV_ID_SENSOR,              //  Device ID
+  DEV_ID_BUTTON,              //  Device ID
   DEVICE_VERSION_SENSOR,      //  Device Version
   0,                          //  Reserved
   NUM_IN_CMD_SENSOR,          //  Number of Input Commands
@@ -187,7 +187,7 @@ void zb_HandleOsalEvent( uint16 event )
     // Delete previous binding
     if ( appState == APP_REPORT )
     {
-      zb_BindDevice( FALSE, SENSOR_REPORT_CMD_ID, (uint8 *)NULL );
+      zb_BindDevice( FALSE, BUTTON_REPORT_CMD_ID, (uint8 *)NULL );
     }
 
     appState = APP_BIND;
@@ -195,7 +195,7 @@ void zb_HandleOsalEvent( uint16 event )
     HalLedBlink ( HAL_LED_2, 0, 50, 500 );
 
     // Find and bind to a collector device
-    zb_BindDevice( TRUE, SENSOR_REPORT_CMD_ID, (uint8 *)NULL );
+    zb_BindDevice( TRUE, BUTTON_REPORT_CMD_ID, (uint8 *)NULL );
   }
 }
 
@@ -349,14 +349,14 @@ void zb_BindConfirm( uint16 commandId, uint8 status )
 
     // After failure reporting start automatically when the device
     // is binded to a new gateway
-    if ( reportState )
+    /*if ( reportState )
     {
       // blink LED 2 to indicate reporting
       HalLedBlink ( HAL_LED_2, 0, 50, 500 );
 
       // Start reporting
       osal_set_event( sapi_TaskID, MY_REPORT_EVT );
-    }
+    }*/
   }
   else
   {
@@ -474,7 +474,7 @@ static void sendReport(void)
   // established binding for the commandId.
   if (pData[SENSOR_VOLTAGE_OFFSET] != lastSentData[SENSOR_VOLTAGE_OFFSET] 
       || timeSinceLastSent >= 60000) {
-    zb_SendDataRequest( 0xFFFE, SENSOR_REPORT_CMD_ID, SENSOR_REPORT_LENGTH, 
+    zb_SendDataRequest( 0xFFFE, BUTTON_REPORT_CMD_ID, SENSOR_REPORT_LENGTH, 
                        pData, 0, txOptions, 0 );
     for (int i = 0; i < SENSOR_REPORT_LENGTH; i++) {
         lastSentData[i] = pData[i];

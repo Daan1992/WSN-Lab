@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# IAR C/C++ Compiler V9.20.1.2476 for 8051                09/Mar/2016  15:06:15
+# IAR C/C++ Compiler V9.20.1.2476 for 8051                23/Mar/2016  15:17:03
 # Copyright 2004-2015 IAR Systems AB.
 # Standalone license - IAR Embedded Workbench for 8051
 #
@@ -21,7 +21,7 @@
 #        -DMAC_CFG_TX_MAX=6 -DMAC_CFG_RX_MAX=3) -f
 #        "C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh
 #        1.0.0\Projects\zstack\Samples\DemoApp\CC2530DB\..\..\..\Tools\CC2530DB\f8wConfig.cfg"
-#        (-DZIGBEEPRO -DSECURE=0 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
+#        (-DZIGBEEPRO -DSECURE=1 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
 #        -DDEFAULT_CHANLIST=0x02000000 -DDEFAULT_CHANLIST=0x00000800
 #        -DZDAPP_CONFIG_PAN_ID=0x1AAD -DNWK_START_DELAY=100
 #        -DEXTENDED_JOINING_RANDOM_MASK=0x007F -DBEACON_REQUEST_DELAY=100
@@ -275,7 +275,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
    \                     zb_OutCmdList:
    \   000000   0200         DW 2
     119          {
-    120            SENSOR_REPORT_CMD_ID
+    120            BUTTON_REPORT_CMD_ID
     121          };
     122          
     123          // Define SimpleDescriptor for Sensor device
@@ -294,7 +294,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
     125          {
     126            MY_ENDPOINT_ID,             //  Endpoint
     127            MY_PROFILE_ID,              //  Profile ID
-    128            DEV_ID_SENSOR,              //  Device ID
+    128            DEV_ID_BUTTON,              //  Device ID
     129            DEVICE_VERSION_SENSOR,      //  Device Version
     130            0,                          //  Reserved
     131            NUM_IN_CMD_SENSOR,          //  Number of Input Commands
@@ -418,7 +418,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
    \   000057   6404         XRL     A,#0x4
    \   000059   700D         JNZ     ??zb_HandleOsalEvent_4
     189              {
-    190                zb_BindDevice( FALSE, SENSOR_REPORT_CMD_ID, (uint8 *)NULL );
+    190                zb_BindDevice( FALSE, BUTTON_REPORT_CMD_ID, (uint8 *)NULL );
    \   00005B                ; Setup parameters for call to function zb_BindDevice
    \   00005B   7C00         MOV     R4,#0x0
    \   00005D   7D00         MOV     R5,#0x0
@@ -444,7 +444,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
    \   000077   12....       LCALL   `??HalLedBlink::?relay`; Banked call to: HalLedBlink
     196          
     197              // Find and bind to a collector device
-    198              zb_BindDevice( TRUE, SENSOR_REPORT_CMD_ID, (uint8 *)NULL );
+    198              zb_BindDevice( TRUE, BUTTON_REPORT_CMD_ID, (uint8 *)NULL );
    \   00007A                ; Setup parameters for call to function zb_BindDevice
    \   00007A   7C00         MOV     R4,#0x0
    \   00007C   7D00         MOV     R5,#0x0
@@ -769,7 +769,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
    \   000005                ; Auto size: 0
    \   000005   E9           MOV     A,R1
     345            if( status == ZB_SUCCESS )
-   \   000006   702E         JNZ     ??zb_BindConfirm_0
+   \   000006   700F         JNZ     ??zb_BindConfirm_0
     346            {
     347              appState = APP_REPORT;
    \   000008   90....       MOV     DPTR,#appState
@@ -780,57 +780,40 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
    \   00000E   7A00         MOV     R2,#0x0
    \   000010   7902         MOV     R1,#0x2
    \   000012   12....       LCALL   `??HalLedSet::?relay`; Banked call to: HalLedSet
+   \   000015   801A         SJMP    ??zb_BindConfirm_1
     349          
     350              // After failure reporting start automatically when the device
     351              // is binded to a new gateway
-    352              if ( reportState )
-   \   000015   90....       MOV     DPTR,#reportState
-   \   000018   E0           MOVX    A,@DPTR
-   \   000019   6035         JZ      ??zb_BindConfirm_1
+    352              /*if ( reportState )
     353              {
     354                // blink LED 2 to indicate reporting
     355                HalLedBlink ( HAL_LED_2, 0, 50, 500 );
-   \   00001B                ; Setup parameters for call to function HalLedBlink
-   \   00001B   7CF4         MOV     R4,#-0xc
-   \   00001D   7D01         MOV     R5,#0x1
-   \   00001F   7B32         MOV     R3,#0x32
-   \   000021   7A00         MOV     R2,#0x0
-   \   000023   7902         MOV     R1,#0x2
-   \   000025   12....       LCALL   `??HalLedBlink::?relay`; Banked call to: HalLedBlink
     356          
     357                // Start reporting
     358                osal_set_event( sapi_TaskID, MY_REPORT_EVT );
-   \   000028                ; Setup parameters for call to function osal_set_event
-   \   000028   7A02         MOV     R2,#0x2
-   \   00002A   7B00         MOV     R3,#0x0
-   \   00002C   90....       MOV     DPTR,#sapi_TaskID
-   \   00002F   E0           MOVX    A,@DPTR
-   \   000030   F9           MOV     R1,A
-   \   000031   12....       LCALL   `??osal_set_event::?relay`; Banked call to: osal_set_event
-   \   000034   801A         SJMP    ??zb_BindConfirm_1
-    359              }
+    359              }*/
     360            }
     361            else
     362            {
     363              osal_start_timerEx( sapi_TaskID, MY_FIND_COLLECTOR_EVT, myBindRetryDelay );
    \                     ??zb_BindConfirm_0:
-   \   000036                ; Setup parameters for call to function osal_start_timerEx
-   \   000036   90....       MOV     DPTR,#myBindRetryDelay
-   \   000039   12....       LCALL   ?Subroutine2 & 0xFFFF
+   \   000017                ; Setup parameters for call to function osal_start_timerEx
+   \   000017   90....       MOV     DPTR,#myBindRetryDelay
+   \   00001A   12....       LCALL   ?Subroutine2 & 0xFFFF
     364            }
    \                     ??CrossCallReturnLabel_1:
-   \   00003C   12....       LCALL   ?PUSH_XSTACK_I_FOUR
-   \   00003F   7A04         MOV     R2,#0x4
-   \   000041   7B00         MOV     R3,#0x0
-   \   000043   90....       MOV     DPTR,#sapi_TaskID
-   \   000046   E0           MOVX    A,@DPTR
-   \   000047   F9           MOV     R1,A
-   \   000048   12....       LCALL   `??osal_start_timerEx::?relay`; Banked call to: osal_start_timerEx
-   \   00004B   7404         MOV     A,#0x4
-   \   00004D   12....       LCALL   ?DEALLOC_XSTACK8
+   \   00001D   12....       LCALL   ?PUSH_XSTACK_I_FOUR
+   \   000020   7A04         MOV     R2,#0x4
+   \   000022   7B00         MOV     R3,#0x0
+   \   000024   90....       MOV     DPTR,#sapi_TaskID
+   \   000027   E0           MOVX    A,@DPTR
+   \   000028   F9           MOV     R1,A
+   \   000029   12....       LCALL   `??osal_start_timerEx::?relay`; Banked call to: osal_start_timerEx
+   \   00002C   7404         MOV     A,#0x4
+   \   00002E   12....       LCALL   ?DEALLOC_XSTACK8
     365          }
    \                     ??zb_BindConfirm_1:
-   \   000050   02....       LJMP    ?Subroutine0 & 0xFFFF
+   \   000031   02....       LJMP    ?Subroutine0 & 0xFFFF
     366          
     367          /******************************************************************************
     368           * @fn          zb_AllowBindConfirm
@@ -1124,7 +1107,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
    \   0000FA   E0           MOVX    A,@DPTR
    \   0000FB   94EA         SUBB    A,#-0x16
    \   0000FD   4073         JC      ??sendReport_7
-    477              zb_SendDataRequest( 0xFFFE, SENSOR_REPORT_CMD_ID, SENSOR_REPORT_LENGTH, 
+    477              zb_SendDataRequest( 0xFFFE, BUTTON_REPORT_CMD_ID, SENSOR_REPORT_LENGTH, 
     478                                 pData, 0, txOptions, 0 );
    \                     ??sendReport_6:
    \   0000FF                ; Setup parameters for call to function zb_SendDataRequest
@@ -1402,9 +1385,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
       0      0   uartRxCB
       0      0   zb_AllowBindConfirm
       0     16   zb_BindConfirm
-        0     12   -> HalLedBlink
         0     12   -> HalLedSet
-        0     12   -> osal_set_event
         0     16   -> osal_start_timerEx
       0      0   zb_FindDeviceConfirm
       0      9   zb_HandleKeys
@@ -1458,7 +1439,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
        2  voltageAtTemp22
        3  zb_AllowBindConfirm
        6  zb_AllowBindConfirm::?relay
-      83  zb_BindConfirm
+      52  zb_BindConfirm
        6  zb_BindConfirm::?relay
        3  zb_FindDeviceConfirm
        6  zb_FindDeviceConfirm::?relay
@@ -1476,14 +1457,14 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
        6  zb_StartConfirm::?relay
 
  
- 837 bytes in segment BANKED_CODE
+ 806 bytes in segment BANKED_CODE
   60 bytes in segment BANK_RELAYS
    8 bytes in segment XDATA_I
    8 bytes in segment XDATA_ID
   18 bytes in segment XDATA_ROM_C
   12 bytes in segment XDATA_Z
  
- 905 bytes of CODE  memory
+ 874 bytes of CODE  memory
   14 bytes of CONST memory (+ 4 bytes shared)
   20 bytes of XDATA memory
 

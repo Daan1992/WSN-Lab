@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# IAR C/C++ Compiler V9.20.1.2476 for 8051                09/Mar/2016  15:06:20
+# IAR C/C++ Compiler V9.20.1.2476 for 8051                23/Mar/2016  14:33:05
 # Copyright 2004-2015 IAR Systems AB.
 # Standalone license - IAR Embedded Workbench for 8051
 #
@@ -21,7 +21,7 @@
 #        -DMAC_CFG_TX_MAX=6 -DMAC_CFG_RX_MAX=3) -f
 #        "C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh
 #        1.0.0\Projects\zstack\Samples\DemoApp\CC2530DB\..\..\..\Tools\CC2530DB\f8wConfig.cfg"
-#        (-DZIGBEEPRO -DSECURE=0 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
+#        (-DZIGBEEPRO -DSECURE=1 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
 #        -DDEFAULT_CHANLIST=0x02000000 -DDEFAULT_CHANLIST=0x00000800
 #        -DZDAPP_CONFIG_PAN_ID=0x1AAD -DNWK_START_DELAY=100
 #        -DEXTENDED_JOINING_RANDOM_MASK=0x007F -DBEACON_REQUEST_DELAY=100
@@ -3727,13 +3727,16 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
    \   000002   C083         PUSH    DPH
    \   000004                ; Saved register size: 2
    \   000004                ; Auto size: 0
-   \   000004                ; Setup parameters for call to function APSME_SecurityNM
+   \   000004                ; Setup parameters for call to function SSP_Init
    \   000004                ; Saved register size: 2
    \   000004                ; Auto size: 0
-   \   000004                ; Setup parameters for call to function APSME_SecurityNM
-   \   000004   12....       LCALL   `??APSME_SecurityNM::?relay`; Banked call to: APSME_SecurityNM
-   \   000007                REQUIRE ??Subroutine54_0
-   \   000007                ; // Fall through to label ??Subroutine54_0
+   \   000004                ; Setup parameters for call to function SSP_Init
+   \   000004   12....       LCALL   `??SSP_Init::?relay` ; Banked call to: SSP_Init
+   \   000007                ; Setup parameters for call to function APSME_SecurityRM_ED
+   \   000007                ; Setup parameters for call to function APSME_SecurityRM_ED
+   \   000007   12....       LCALL   `??APSME_SecurityRM_ED::?relay`; Banked call to: APSME_SecurityRM_ED
+   \   00000A                REQUIRE ??Subroutine54_0
+   \   00000A                ; // Fall through to label ??Subroutine54_0
 
    \                                 In  segment BANKED_CODE, align 1, keep-with-next
    1384          void ZDSecMgrInit(uint8 state)
@@ -8850,7 +8853,8 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
         0     22   -> AddrMgrEntryLookupExt
         0     22   -> AddrMgrExtAddrSet
       2      0   ZDSecMgrConfig
-        2      0   -> APSME_SecurityNM
+        2      0   -> APSME_SecurityRM_ED
+        2      0   -> SSP_Init
       0     53   ZDSecMgrDeviceJoin
         0     38   -> AddrMgrEntryUpdate
         0     38   -> AddrMgrExtAddrSet
@@ -8902,7 +8906,8 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
         0     22   -> AddrMgrEntryUpdate
         0     22   -> AddrMgrExtAddrSet
       2      0   ZDSecMgrInit
-        2      0   -> APSME_SecurityNM
+        2      0   -> APSME_SecurityRM_ED
+        2      0   -> SSP_Init
       0     16   ZDSecMgrInitNV
         0     14   -> osal_nv_item_init
         0     16   -> osal_nv_write
@@ -9020,7 +9025,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
        3  ??Subroutine69_0
        5  ??Subroutine70_0
        2  ?Subroutine0
-       7  ?Subroutine1
+      10  ?Subroutine1
        4  ?Subroutine10
        5  ?Subroutine11
        4  ?Subroutine12
@@ -9196,14 +9201,14 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDSec
        4  __Constant_1
 
  
- 7 308 bytes in segment BANKED_CODE
+ 7 311 bytes in segment BANKED_CODE
    360 bytes in segment BANK_RELAYS
      1 byte  in segment XDATA_I
      1 byte  in segment XDATA_ID
     12 bytes in segment XDATA_ROM_C
     81 bytes in segment XDATA_Z
  
- 7 669 bytes of CODE  memory
+ 7 672 bytes of CODE  memory
      8 bytes of CONST memory (+ 4 bytes shared)
     82 bytes of XDATA memory
 

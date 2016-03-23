@@ -56,15 +56,17 @@
 #define MY_ENDPOINT_ID                    0x02
 
 // Define devices
-#define DEV_ID_SENSOR                     1
-#define DEV_ID_COLLECTOR                  2
+#define DEV_ID_BUTTON                     1
+#define DEV_ID_COORDINATOR                2
+#define DEV_ID_ROUTER                     3
 
 #define DEVICE_VERSION_SENSOR             1
 #define DEVICE_VERSION_COLLECTOR          1
+#define DEVICE_VERSION_ROUTER             1
 
 // Define the Command ID's used in this application
-#define SENSOR_REPORT_CMD_ID              2
-#define DUMMY_REPORT_CMD_ID               3
+#define BUTTON_REPORT_CMD_ID              2
+#define ROUTER_REPORT_CMD_ID              3
 
 // Sensor report data format
 #define SENSOR_TEMP_OFFSET                0

@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# IAR C/C++ Compiler V9.20.1.2476 for 8051                09/Mar/2016  15:05:19
+# IAR C/C++ Compiler V9.20.1.2476 for 8051                23/Mar/2016  15:18:39
 # Copyright 2004-2015 IAR Systems AB.
 # Standalone license - IAR Embedded Workbench for 8051
 #
@@ -22,7 +22,7 @@
 #        -DZDO_COORDINATOR -DRTR_NWK) -f
 #        "C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh
 #        1.0.0\Projects\zstack\Samples\DemoApp\CC2530DB\..\..\..\Tools\CC2530DB\f8wConfig.cfg"
-#        (-DZIGBEEPRO -DSECURE=0 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
+#        (-DZIGBEEPRO -DSECURE=1 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
 #        -DDEFAULT_CHANLIST=0x02000000 -DDEFAULT_CHANLIST=0x00000800
 #        -DZDAPP_CONFIG_PAN_ID=0x1AAD -DNWK_START_DELAY=100
 #        -DEXTENDED_JOINING_RANDOM_MASK=0x007F -DBEACON_REQUEST_DELAY=100
@@ -265,9 +265,9 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
    \                                 In  segment XDATA_ROM_C, align 1
     142          const cId_t zb_InCmdList[NUM_IN_CMD_COLLECTOR] =
    \                     zb_InCmdList:
-   \   000000   0200         DW 2
+   \   000000   0300         DW 3
     143          {
-    144            SENSOR_REPORT_CMD_ID,
+    144            ROUTER_REPORT_CMD_ID,
     145          };
     146          
     147          // Define SimpleDescriptor for Collector device
@@ -286,7 +286,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
     149          {
     150            MY_ENDPOINT_ID,             //  Endpoint
     151            MY_PROFILE_ID,              //  Profile ID
-    152            DEV_ID_COLLECTOR,           //  Device ID
+    152            DEV_ID_COORDINATOR,         //  Device ID
     153            DEVICE_VERSION_COLLECTOR,   //  Device Version
     154            0,                          //  Reserved
     155            NUM_IN_CMD_COLLECTOR,       //  Number of Input Commands
@@ -995,12 +995,12 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Projects\zstack\Samples\De
    \   000048   F0           MOVX    @DPTR,A
     504          
     505            // Command ID
-    506            pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET] = LO_UINT16(SENSOR_REPORT_CMD_ID);
+    506            pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET] = LO_UINT16(ROUTER_REPORT_CMD_ID);
    \   000049   7406         MOV     A,#0x6
    \   00004B   12....       LCALL   ?XSTACK_DISP0_8
-   \   00004E   7402         MOV     A,#0x2
+   \   00004E   7403         MOV     A,#0x3
    \   000050   F0           MOVX    @DPTR,A
-    507            pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET+ 1] = HI_UINT16(SENSOR_REPORT_CMD_ID);
+    507            pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET+ 1] = HI_UINT16(ROUTER_REPORT_CMD_ID);
    \   000051   7407         MOV     A,#0x7
    \   000053   12....       LCALL   ?XSTACK_DISP0_8
    \   000056   E4           CLR     A

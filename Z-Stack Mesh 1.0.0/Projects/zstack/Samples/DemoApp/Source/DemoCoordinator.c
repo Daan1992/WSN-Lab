@@ -141,7 +141,7 @@ static void sendGtwReport(gtwData_t *gtwData);
 // List of output and input commands for Collector device
 const cId_t zb_InCmdList[NUM_IN_CMD_COLLECTOR] =
 {
-  SENSOR_REPORT_CMD_ID,
+  ROUTER_REPORT_CMD_ID,
 };
 
 // Define SimpleDescriptor for Collector device
@@ -149,7 +149,7 @@ const SimpleDescriptionFormat_t zb_SimpleDesc =
 {
   MY_ENDPOINT_ID,             //  Endpoint
   MY_PROFILE_ID,              //  Profile ID
-  DEV_ID_COLLECTOR,           //  Device ID
+  DEV_ID_COORDINATOR,         //  Device ID
   DEVICE_VERSION_COLLECTOR,   //  Device Version
   0,                          //  Reserved
   NUM_IN_CMD_COLLECTOR,       //  Number of Input Commands
@@ -503,8 +503,8 @@ static void sendGtwReport(gtwData_t *gtwData)
   pFrame[FRAME_DATA_OFFSET + ZB_RECV_SRC_OFFSET+ 1] = HI_UINT16(gtwData->source);
 
   // Command ID
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET] = LO_UINT16(SENSOR_REPORT_CMD_ID);
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET+ 1] = HI_UINT16(SENSOR_REPORT_CMD_ID);
+  pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET] = LO_UINT16(ROUTER_REPORT_CMD_ID);
+  pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET+ 1] = HI_UINT16(ROUTER_REPORT_CMD_ID);
 
   // Length
   pFrame[FRAME_DATA_OFFSET + ZB_RECV_LEN_OFFSET] = LO_UINT16(4);

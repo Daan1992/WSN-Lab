@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// IAR C/C++ Compiler V9.20.1.2476 for 8051               09/Mar/2016  15:06:15
+// IAR C/C++ Compiler V9.20.1.2476 for 8051               23/Mar/2016  15:17:03
 // Copyright 2004-2015 IAR Systems AB.
 // Standalone license - IAR Embedded Workbench for 8051
 //
@@ -21,7 +21,7 @@
 //        -DMAC_CFG_TX_MAX=6 -DMAC_CFG_RX_MAX=3) -f
 //        "C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh
 //        1.0.0\Projects\zstack\Samples\DemoApp\CC2530DB\..\..\..\Tools\CC2530DB\f8wConfig.cfg"
-//        (-DZIGBEEPRO -DSECURE=0 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
+//        (-DZIGBEEPRO -DSECURE=1 -DZG_SECURE_DYNAMIC=0 -DREFLECTOR
 //        -DDEFAULT_CHANLIST=0x02000000 -DDEFAULT_CHANLIST=0x00000800
 //        -DZDAPP_CONFIG_PAN_ID=0x1AAD -DNWK_START_DELAY=100
 //        -DEXTENDED_JOINING_RANDOM_MASK=0x007F -DBEACON_REQUEST_DELAY=100
@@ -678,7 +678,7 @@ timeSinceLastSent:
 zb_OutCmdList:
         DW 2
 //  119 {
-//  120   SENSOR_REPORT_CMD_ID
+//  120   BUTTON_REPORT_CMD_ID
 //  121 };
 //  122 
 //  123 // Define SimpleDescriptor for Sensor device
@@ -703,7 +703,7 @@ zb_SimpleDesc:
 //  125 {
 //  126   MY_ENDPOINT_ID,             //  Endpoint
 //  127   MY_PROFILE_ID,              //  Profile ID
-//  128   DEV_ID_SENSOR,              //  Device ID
+//  128   DEV_ID_BUTTON,              //  Device ID
 //  129   DEVICE_VERSION_SENSOR,      //  Device Version
 //  130   0,                          //  Reserved
 //  131   NUM_IN_CMD_SENSOR,          //  Number of Input Commands
@@ -934,7 +934,7 @@ zb_HandleOsalEvent:
         XRL     A,#0x4
         JNZ     ??zb_HandleOsalEvent_4
 //  189     {
-//  190       zb_BindDevice( FALSE, SENSOR_REPORT_CMD_ID, (uint8 *)NULL );
+//  190       zb_BindDevice( FALSE, BUTTON_REPORT_CMD_ID, (uint8 *)NULL );
         ; Setup parameters for call to function zb_BindDevice
         MOV     R4,#0x0
         MOV     R5,#0x0
@@ -960,7 +960,7 @@ zb_HandleOsalEvent:
         LCALL   `??HalLedBlink::?relay`; Banked call to: HalLedBlink
 //  196 
 //  197     // Find and bind to a collector device
-//  198     zb_BindDevice( TRUE, SENSOR_REPORT_CMD_ID, (uint8 *)NULL );
+//  198     zb_BindDevice( TRUE, BUTTON_REPORT_CMD_ID, (uint8 *)NULL );
         ; Setup parameters for call to function zb_BindDevice
         MOV     R4,#0x0
         MOV     R5,#0x0
@@ -1471,28 +1471,6 @@ zb_BindConfirm:
         ARGFRAME XSTACK, 12, STACK
         ARGFRAME IOVERLAY, 0, STATIC
         ARGFRAME DOVERLAY, 0, STATIC
-        FUNCALL zb_BindConfirm, HalLedBlink
-        LOCFRAME ISTACK, 0, STACK
-        LOCFRAME PSTACK, 0, STACK
-        LOCFRAME XSTACK, 12, STACK
-        LOCFRAME IOVERLAY, 0, STATIC
-        LOCFRAME DOVERLAY, 0, STATIC
-        ARGFRAME ISTACK, 0, STACK
-        ARGFRAME PSTACK, 0, STACK
-        ARGFRAME XSTACK, 12, STACK
-        ARGFRAME IOVERLAY, 0, STATIC
-        ARGFRAME DOVERLAY, 0, STATIC
-        FUNCALL zb_BindConfirm, osal_set_event
-        LOCFRAME ISTACK, 0, STACK
-        LOCFRAME PSTACK, 0, STACK
-        LOCFRAME XSTACK, 12, STACK
-        LOCFRAME IOVERLAY, 0, STATIC
-        LOCFRAME DOVERLAY, 0, STATIC
-        ARGFRAME ISTACK, 0, STACK
-        ARGFRAME PSTACK, 0, STACK
-        ARGFRAME XSTACK, 12, STACK
-        ARGFRAME IOVERLAY, 0, STATIC
-        ARGFRAME DOVERLAY, 0, STATIC
         FUNCALL zb_BindConfirm, osal_start_timerEx
         LOCFRAME ISTACK, 0, STACK
         LOCFRAME PSTACK, 0, STACK
@@ -1539,35 +1517,18 @@ zb_BindConfirm:
         MOV     R2,#0x0
         MOV     R1,#0x2
         LCALL   `??HalLedSet::?relay`; Banked call to: HalLedSet
+        SJMP    ??zb_BindConfirm_1
 //  349 
 //  350     // After failure reporting start automatically when the device
 //  351     // is binded to a new gateway
-//  352     if ( reportState )
-        MOV     DPTR,#reportState
-        MOVX    A,@DPTR
-        JZ      ??zb_BindConfirm_1
+//  352     /*if ( reportState )
 //  353     {
 //  354       // blink LED 2 to indicate reporting
 //  355       HalLedBlink ( HAL_LED_2, 0, 50, 500 );
-        ; Setup parameters for call to function HalLedBlink
-        MOV     R4,#-0xc
-        MOV     R5,#0x1
-        MOV     R3,#0x32
-        MOV     R2,#0x0
-        MOV     R1,#0x2
-        LCALL   `??HalLedBlink::?relay`; Banked call to: HalLedBlink
 //  356 
 //  357       // Start reporting
 //  358       osal_set_event( sapi_TaskID, MY_REPORT_EVT );
-        ; Setup parameters for call to function osal_set_event
-        MOV     R2,#0x2
-        MOV     R3,#0x0
-        MOV     DPTR,#sapi_TaskID
-        MOVX    A,@DPTR
-        MOV     R1,A
-        LCALL   `??osal_set_event::?relay`; Banked call to: osal_set_event
-        SJMP    ??zb_BindConfirm_1
-//  359     }
+//  359     }*/
 //  360   }
 //  361   else
 //  362   {
@@ -2017,7 +1978,7 @@ sendReport:
         MOVX    A,@DPTR
         SUBB    A,#-0x16
         JC      ??sendReport_7
-//  477     zb_SendDataRequest( 0xFFFE, SENSOR_REPORT_CMD_ID, SENSOR_REPORT_LENGTH, 
+//  477     zb_SendDataRequest( 0xFFFE, BUTTON_REPORT_CMD_ID, SENSOR_REPORT_LENGTH, 
 //  478                        pData, 0, txOptions, 0 );
 ??sendReport_6:
         ; Setup parameters for call to function zb_SendDataRequest
@@ -2341,14 +2302,14 @@ __Constant_42160000:
 //  577   #endif // CC2530
 //  578 }
 // 
-// 837 bytes in segment BANKED_CODE
+// 806 bytes in segment BANKED_CODE
 //  60 bytes in segment BANK_RELAYS
 //   8 bytes in segment XDATA_I
 //   8 bytes in segment XDATA_ID
 //  18 bytes in segment XDATA_ROM_C
 //  12 bytes in segment XDATA_Z
 // 
-// 905 bytes of CODE  memory
+// 874 bytes of CODE  memory
 //  14 bytes of CONST memory (+ 4 bytes shared)
 //  20 bytes of XDATA memory
 //

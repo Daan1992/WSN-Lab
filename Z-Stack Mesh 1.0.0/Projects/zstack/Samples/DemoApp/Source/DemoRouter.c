@@ -349,6 +349,8 @@ void zb_BindConfirm( uint16 commandId, uint8 status )
   {
     appState = APP_REPORT;
     HalLedSet( HAL_LED_2, HAL_LED_MODE_OFF );
+    MCU_IO_DIR_OUTPUT(LED_PORT, LED_PIN);
+    MCU_IO_SET_HIGH(LED_PORT, LED_PIN);
 
     // After failure reporting start automatically when the device
     // is binded to a new gateway

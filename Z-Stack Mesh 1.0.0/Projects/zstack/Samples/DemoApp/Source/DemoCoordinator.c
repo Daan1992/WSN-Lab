@@ -53,6 +53,7 @@
 #include "hal_led.h"
 #include "hal_lcd.h"
 #include "hal_uart.h"
+#include "hal_adc.h"
 #include "DemoApp.h"
 
 /******************************************************************************
@@ -65,6 +66,13 @@
 #define FRAME_CMD0_OFFSET                   2
 #define FRAME_CMD1_OFFSET                   3
 #define FRAME_DATA_OFFSET                   4
+
+// Pin & port defines
+#define PORT                                0
+#define LDR_IN_ANALOG                       0
+#define LOCK_IN_DIGITAL                     2
+#define LED_OUT_DIGITAL                     4
+#define DOOR_OUT_DIGITAL                    7   
 
 // ZB_RECEIVE_DATA_INDICATION offsets
 #define ZB_RECV_SRC_OFFSET                  0
@@ -101,17 +109,7 @@
 
 // Application osal event identifiers
 #define MY_START_EVT                        0x0001
-
-/******************************************************************************
- * TYPEDEFS
- */
-typedef struct
-{
-  uint16              source;
-  uint16              parent;
-  uint8               temp;
-  uint8               voltage;
-} gtwData_t;
+#define POLL_TIMER_EVT                      0x0002
 
 /******************************************************************************
  * LOCAL VARIABLES
@@ -119,7 +117,9 @@ typedef struct
 
 static uint8 appState =             APP_INIT;
 static uint8 myStartRetryDelay =    10;          // milliseconds
-static gtwData_t gtwData;
+static uint8 doorOpen =             0xFF;
+static uint8 lampTriggered =        0xFF;
+static uint8 lastLockState =        0xFF;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -128,17 +128,20 @@ static gtwData_t gtwData;
 static uint8 calcFCS(uint8 *pBuf, uint8 len);
 static void sysPingReqRcvd(void);
 static void sysPingRsp(void);
-static void sendGtwReport(gtwData_t *gtwData);
 
 /******************************************************************************
  * GLOBAL VARIABLES
  */
 
 // Inputs and Outputs for Collector device
-#define NUM_OUT_CMD_COLLECTOR           0
+#define NUM_OUT_CMD_COLLECTOR           1
 #define NUM_IN_CMD_COLLECTOR            1
 
 // List of output and input commands for Collector device
+const cId_t zb_OutCmdList[NUM_OUT_CMD_COLLECTOR] =
+{
+  COORD_REPORT_CMD_ID,
+};
 const cId_t zb_InCmdList[NUM_IN_CMD_COLLECTOR] =
 {
   ROUTER_REPORT_CMD_ID,
@@ -187,13 +190,50 @@ void zb_HandleOsalEvent( uint16 event )
     HalLedBlink ( HAL_LED_1, 0, 50, 500 );
     HalLedSet( HAL_LED_2, HAL_LED_MODE_OFF );
 
+    //Initiate ADC
+    HalAdcInit();
+      
+    //Initiate GPIO
+    MCU_IO_DIR_OUTPUT(PORT, LED_OUT_DIGITAL);
+    MCU_IO_DIR_OUTPUT(PORT, DOOR_OUT_DIGITAL);
+    MCU_IO_INPUT(PORT, LOCK_IN_DIGITAL, MCU_IO_PULLDOWN);
+    
     // Start the device
     zb_StartRequest();
+    osal_start_reload_timer( 0xFA, POLL_TIMER_EVT, 500); 
   }
 
   if ( event & MY_START_EVT )
   {
     zb_StartRequest();
+  }
+  if ( event & POLL_TIMER_EVT )
+  {
+    if (HalAdcRead(HAL_ADC_CHN_AIN0, HAL_ADC_RESOLUTION_8) > 0xFF00) 
+    {  
+      MCU_IO_SET(PORT, LED_OUT_DIGITAL, lampTriggered);
+    }
+    else 
+    {
+      MCU_IO_SET_LOW(PORT, LED_OUT_DIGITAL);
+    }
+    if (MCU_IO_GET(PORT, LOCK_IN_DIGITAL) != lastLockState)
+    {
+      lastLockState = MCU_IO_GET(PORT, LOCK_IN_DIGITAL);
+      uint8 pData[1];
+      static uint8 reportNr = 0;
+      uint8 txOptions;
+      
+      if (lastLockState) 
+      {
+        pData[0] = DOOR_UNLOCKED;
+      }
+      else
+      {
+        pData[0] = DOOR_LOCKED;
+      }
+      zb_SendDataRequest( 0xFFFF, COORD_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
+    }
   }
 }
 
@@ -377,19 +417,21 @@ void zb_FindDeviceConfirm( uint8 searchType, uint8 *searchKey, uint8 *result )
  */
 void zb_ReceiveDataIndication( uint16 source, uint16 command, uint16 len, uint8 *pData  )
 {
-  (void)command;
-  (void)len;
-
-  gtwData.parent = BUILD_UINT16(pData[SENSOR_PARENT_OFFSET+ 1], pData[SENSOR_PARENT_OFFSET]);
-  gtwData.source = source;
-  gtwData.temp = *pData;
-  gtwData.voltage = *(pData+1);
-
-  // Flash LED 2 once to indicate data reception
-  HalLedSet ( HAL_LED_2, HAL_LED_MODE_FLASH );
-
-  // Send gateway report
-  sendGtwReport(&gtwData);
+  if (pData[len-1] == DOOR_BUTTON_PRESSED) 
+  {
+    doorOpen = !doorOpen;
+    if (doorOpen) {
+      MCU_IO_SET_HIGH(PORT, DOOR_OUT_DIGITAL);
+    }
+    else
+    {
+      MCU_IO_SET_LOW(PORT, DOOR_OUT_DIGITAL);
+    }
+  }
+  else if (pData[len-1] == LAMP_BUTTON_PRESSED)
+  {
+    lampTriggered = !lampTriggered;
+  }
 }
 
 /******************************************************************************
@@ -473,54 +515,6 @@ static void sysPingRsp(void)
 
   // Write frame to UART
   HalUARTWrite(HAL_UART_PORT_0,pBuf, SYS_PING_RSP_LENGTH);
-}
-
-/******************************************************************************
- * @fn          sendGtwReport
- *
- * @brief       Build and send gateway report
- *
- * @param       none
- *
- * @return      none
- */
-static void sendGtwReport(gtwData_t *gtwData)
-{
-  uint8 pFrame[ZB_RECV_LENGTH];
-
-  // Start of Frame Delimiter
-  pFrame[FRAME_SOF_OFFSET] = CPT_SOP; // Start of Frame Delimiter
-
-  // Length
-  pFrame[FRAME_LENGTH_OFFSET] = 10;
-
-  // Command type
-  pFrame[FRAME_CMD0_OFFSET] = LO_UINT16(ZB_RECEIVE_DATA_INDICATION);
-  pFrame[FRAME_CMD1_OFFSET] = HI_UINT16(ZB_RECEIVE_DATA_INDICATION);
-
-  // Source address
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_SRC_OFFSET] = LO_UINT16(gtwData->source);
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_SRC_OFFSET+ 1] = HI_UINT16(gtwData->source);
-
-  // Command ID
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET] = LO_UINT16(ROUTER_REPORT_CMD_ID);
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_CMD_OFFSET+ 1] = HI_UINT16(ROUTER_REPORT_CMD_ID);
-
-  // Length
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_LEN_OFFSET] = LO_UINT16(4);
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_LEN_OFFSET+ 1] = HI_UINT16(4);
-
-  // Data
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_DATA_OFFSET] = gtwData->temp;
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_DATA_OFFSET+ 1] = gtwData->voltage;
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_DATA_OFFSET+ 2] = LO_UINT16(gtwData->parent);
-  pFrame[FRAME_DATA_OFFSET + ZB_RECV_DATA_OFFSET+ 3] = HI_UINT16(gtwData->parent);
-
-  // Frame Check Sequence
-  pFrame[ZB_RECV_LENGTH - 1] = calcFCS(&pFrame[FRAME_LENGTH_OFFSET], (ZB_RECV_LENGTH - 2) );
-
-  // Write report to UART
-  HalUARTWrite(HAL_UART_PORT_0,pFrame, ZB_RECV_LENGTH);
 }
 
 /******************************************************************************

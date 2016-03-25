@@ -7091,6 +7091,7 @@ C:\Users\DLeijen\Documents\WSN-Lab\Z-Stack Mesh 1.0.0\Components\stack\zdo\ZDObj
    1877              if ( tcsig == TRUE )
    \   00004E   7401         MOV     A,#0x1
    \   000050   65..         XRL     A,?V1
+   \   000052   7006         JNZ     ??ZDO_ProcessMgmtPermitJoinReq_0
    1878              {
    1879                ZDSecMgrPermitJoining( duration );
    \   000054                ; Setup parameters for call to function ZDSecMgrPermitJoining

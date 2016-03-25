@@ -246,6 +246,21 @@ void zb_HandleKeys( uint8 shift, uint8 keys )
     }
     if ( keys & HAL_KEY_SW_2 )
     {
+      uint8 pData[1];
+      static uint8 reportNr = 0;
+      uint8 txOptions;
+  
+      pData[0] = LAMP_BUTTON_PRESSED;
+      if ( ++reportNr < ACK_REQ_INTERVAL && reportFailureNr == 0 )
+      {
+        txOptions = AF_TX_OPTIONS_NONE;
+      }
+      else
+      {
+        txOptions = AF_MSG_ACK_REQUEST;
+        reportNr = 0;
+      }
+      zb_SendDataRequest( 0xFFFF, ROUTER_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
     }
     if ( keys & HAL_KEY_SW_3 )
     {

@@ -67,12 +67,19 @@
 // Define the Command ID's used in this application
 #define BUTTON_REPORT_CMD_ID              2
 #define ROUTER_REPORT_CMD_ID              3
+#define COORD_REPORT_CMD_ID               4
 
 // Sensor report data format
 #define SENSOR_TEMP_OFFSET                0
 #define SENSOR_VOLTAGE_OFFSET             1
 #define SENSOR_PARENT_OFFSET              2
 #define SENSOR_REPORT_LENGTH              4
+
+//Define message bytes
+#define DOOR_BUTTON_PRESSED               0xF0
+#define LAMP_BUTTON_PRESSED               0xF1
+#define DOOR_LOCKED                       0xF2
+#define DOOR_UNLOCKED                     0xF3
 
 #define RX_BUF_LEN                        128
 

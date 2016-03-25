@@ -113,7 +113,7 @@ static uint16 parentShortAddr;
 
 // Inputs and Outputs for Sensor device
 #define NUM_OUT_CMD        1
-#define NUM_IN_CMD         1
+#define NUM_IN_CMD         2
 
 // List of output and input commands for Sensor device
 const cId_t zb_OutCmdList[NUM_OUT_CMD] =
@@ -124,6 +124,7 @@ const cId_t zb_OutCmdList[NUM_OUT_CMD] =
 const cId_t zb_InCmdList[NUM_IN_CMD] =
 {
   BUTTON_REPORT_CMD_ID,
+   COORD_REPORT_CMD_ID,
 };
 
 // Define SimpleDescriptor for Sensor device
@@ -147,9 +148,6 @@ const SimpleDescriptionFormat_t zb_SimpleDesc =
  */
 
 void uartRxCB( uint8 port, uint8 event );
-static void sendReport(void);
-static int8 readTemp(void);
-static uint8 readVoltage(void);
 
 /*****************************************************************************
  * @fn          zb_HandleOsalEvent
@@ -174,6 +172,8 @@ void zb_HandleOsalEvent( uint16 event )
 
     // Start the device
     zb_StartRequest();
+    
+    MCU_IO_DIR_OUTPUT(LED_PORT, LED_PIN);
   }
 
   if ( event & MY_START_EVT )
@@ -185,7 +185,6 @@ void zb_HandleOsalEvent( uint16 event )
   {
     if ( appState == APP_REPORT )
     {
-      sendReport();
       osal_start_timerEx( sapi_TaskID, MY_REPORT_EVT, myReportPeriod );
     }
   }
@@ -246,8 +245,21 @@ void zb_HandleKeys( uint8 shift, uint8 keys )
     }
     if ( keys & HAL_KEY_SW_2 )
     {
-      MCU_IO_DIR_OUTPUT(LED_PORT, LED_PIN);
-      MCU_IO_SET(LED_PORT, LED_PIN, !MCU_IO_GET(LED_PORT, LED_PIN));
+      uint8 pData[1];
+      static uint8 reportNr = 0;
+      uint8 txOptions;
+  
+      pData[0] = DOOR_BUTTON_PRESSED;
+      if ( ++reportNr < ACK_REQ_INTERVAL && reportFailureNr == 0 )
+      {
+        txOptions = AF_TX_OPTIONS_NONE;
+      }
+      else
+      {
+        txOptions = AF_MSG_ACK_REQUEST;
+        reportNr = 0;
+      }
+      zb_SendDataRequest( 0xFFFF, ROUTER_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
     }
     if ( keys & HAL_KEY_SW_3 )
     {
@@ -335,6 +347,12 @@ void zb_SendDataConfirm( uint8 handle, uint8 status )
   {
     // Reset failure counter
     reportFailureNr = 0;
+    MCU_IO_DIR_OUTPUT(LED_PORT, LED_PIN);
+    MCU_IO_SET_HIGH(LED_PORT, LED_PIN);
+    for (int i = 0; i < 10000; i++)
+    {
+    }
+    MCU_IO_SET_LOW(LED_PORT, LED_PIN);
   }
 }
 
@@ -355,8 +373,6 @@ void zb_BindConfirm( uint16 commandId, uint8 status )
   {
     appState = APP_REPORT;
     HalLedSet( HAL_LED_2, HAL_LED_MODE_OFF );
-    MCU_IO_DIR_OUTPUT(LED_PORT, LED_PIN);
-    MCU_IO_SET_HIGH(LED_PORT, LED_PIN);
 
     // After failure reporting start automatically when the device
     // is binded to a new gateway
@@ -428,10 +444,10 @@ void zb_FindDeviceConfirm( uint8 searchType, uint8 *searchKey, uint8 *result )
  */
 void zb_ReceiveDataIndication( uint16 source, uint16 command, uint16 len, uint8 *pData  )
 {
-  (void)source;
-  (void)command;
-  (void)len;
-  (void)pData;
+  if (pData[len-1] == DOOR_UNLOCKED || pData[len-1] == DOOR_LOCKED) 
+  {
+    MCU_IO_SET(LED_PORT, LED_PIN, pData[len-1] == DOOR_LOCKED);
+  }
 }
 
 /******************************************************************************
@@ -448,135 +464,4 @@ void uartRxCB( uint8 port, uint8 event )
 {
   (void)port;
   (void)event;
-}
-
-/******************************************************************************
- * @fn          sendReport
- *
- * @brief       Send sensor report
- *
- * @param       none
- *
- * @return      none
- */
-static void sendReport(void)
-{
-  uint8 pData[SENSOR_REPORT_LENGTH];
-  static uint8 reportNr = 0;
-  uint8 txOptions;
-
-  // Read and report temperature value
-  pData[SENSOR_TEMP_OFFSET] = readTemp();
-
-  // Read and report voltage value
-  pData[SENSOR_VOLTAGE_OFFSET] = readVoltage();
-
-  pData[SENSOR_PARENT_OFFSET] =  HI_UINT16(parentShortAddr);
-  pData[SENSOR_PARENT_OFFSET + 1] =  LO_UINT16(parentShortAddr);
-
-  // Set ACK request on each ACK_INTERVAL report
-  // If a report failed, set ACK request on next report
-  if ( ++reportNr < ACK_REQ_INTERVAL && reportFailureNr == 0 )
-  {
-    txOptions = AF_TX_OPTIONS_NONE;
-  }
-  else
-  {
-    txOptions = AF_MSG_ACK_REQUEST;
-    reportNr = 0;
-  }
-  // Destination address 0xFFFE: Destination address is sent to previously
-  // established binding for the commandId.
-  zb_SendDataRequest( 0xFFFE, ROUTER_REPORT_CMD_ID, SENSOR_REPORT_LENGTH, pData, 0, txOptions, 0 );
-}
-
-/******************************************************************************
- * @fn          readTemp
- *
- * @brief       read temperature from ADC
- *
- * @param       none
- *
- * @return      temperature
- */
-static int8 readTemp(void)
-{
-  static uint16 voltageAtTemp22;
-  static uint8 bCalibrate = TRUE; // Calibrate the first time the temp sensor is read
-  uint16 value;
-  int8 temp;
-
-  #if defined (HAL_MCU_CC2530)
-  /*
-   * Use the ADC to read the temperature
-   */
-  value = HalReadTemp();
-
-  // Use the 12 MSB of adcValue
-  value >>= 4;
-
-  /*
-   * These parameters are typical values and need to be calibrated
-   * See the datasheet for the appropriate chip for more details
-   * also, the math below may not be very accurate
-   */
-  /* Assume ADC = 1480 at 25C and ADC = 4/C */
-  #define VOLTAGE_AT_TEMP_25        1480
-  #define TEMP_COEFFICIENT          4
-
-  // Calibrate for 22C the first time the temp sensor is read.
-  // This will assume that the demo is started up in temperature of 22C
-  if ( bCalibrate ) {
-    voltageAtTemp22 = value;
-    bCalibrate = FALSE;
-  }
-
-  temp = 22 + ( (value - voltageAtTemp22) / TEMP_COEFFICIENT );
-
-  // Set 0C as minimum temperature, and 100C as max
-  if ( temp >= 100 )
-  {
-    return 100;
-  }
-  else if ( temp <= 0 ) {
-    return 0;
-  }
-  else {
-    return temp;
-  }
-  // Only CC2530 is supported
-  #else
-  return 0;
-  #endif
-}
-
-/******************************************************************************
- * @fn          readVoltage
- *
- * @brief       read voltage from ADC
- *
- * @param       none
- *
- * @return      voltage
- */
-static uint8 readVoltage(void)
-{
-  #if defined (HAL_MCU_CC2530)
-  /*
-   * Use the ADC to read the bus voltage
-   */
-  uint16 value = HalReadTemp();
-
-  // value now contains measurement of Vdd/3
-  // 0 indicates 0V and 32767 indicates 1.25V
-  // voltage = (value*3*1.25)/32767 volts
-  // we will multiply by this by 10 to allow units of 0.1 volts
-  value = value >> 6;   // divide first by 2^6
-  value = (uint16)(value * 37.5);
-  value = value >> 9;   // ...and later by 2^9...to prevent overflow during multiplication
-
-  return value;
-  #else
-  return 0;
-  #endif // CC2530
 }

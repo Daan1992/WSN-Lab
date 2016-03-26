@@ -139,6 +139,7 @@ const SimpleDescriptionFormat_t zb_SimpleDesc =
  */
 
 void uartRxCB( uint8 port, uint8 event );
+void sendCommand(uint8 command);
 static void sendReport(void);
 static int8 readTemp(void);
 static uint8 readVoltage(void);
@@ -235,32 +236,10 @@ void zb_HandleKeys( uint8 shift, uint8 keys )
   {
     if ( keys & HAL_KEY_SW_1 )
     {
-      // Start reporting
-      if ( reportState == FALSE ) {
-        osal_set_event( sapi_TaskID, MY_REPORT_EVT );
-        reportState = TRUE;
-
-        // blink LED 2 to indicate reporting
-        HalLedBlink ( HAL_LED_2, 0, 50, 500 );
-      }
     }
     if ( keys & HAL_KEY_SW_2 )
     {
-      uint8 pData[1];
-      static uint8 reportNr = 0;
-      uint8 txOptions;
-  
-      pData[0] = LAMP_BUTTON_PRESSED;
-      if ( ++reportNr < ACK_REQ_INTERVAL && reportFailureNr == 0 )
-      {
-        txOptions = AF_TX_OPTIONS_NONE;
-      }
-      else
-      {
-        txOptions = AF_MSG_ACK_REQUEST;
-        reportNr = 0;
-      }
-      zb_SendDataRequest( 0xFFFF, ROUTER_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
+      sendCommand(LAMP_BUTTON_PRESSED);
     }
     if ( keys & HAL_KEY_SW_3 )
     {
@@ -590,4 +569,32 @@ static uint8 readVoltage(void)
   #else
   return 0;
   #endif // CC2530
+}
+
+/******************************************************************************
+ * @fn          sendCommand
+ *
+ * @brief       Sends a command message via Zigbee
+ *
+ * @param       command - uint8 containing the command bit
+ *
+ * @return      none
+ */
+void sendCommand ( uint8 command )
+{
+  uint8 pData[1];
+  static uint8 reportNr = 0;
+  uint8 txOptions;
+
+  pData[0] = command;
+  if ( ++reportNr < ACK_REQ_INTERVAL && reportFailureNr == 0 )
+  {
+    txOptions = AF_TX_OPTIONS_NONE;
+  }
+  else
+  {
+    txOptions = AF_MSG_ACK_REQUEST;
+    reportNr = 0;
+  }
+  zb_SendDataRequest( 0xFFFF, BUTTON_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
 }

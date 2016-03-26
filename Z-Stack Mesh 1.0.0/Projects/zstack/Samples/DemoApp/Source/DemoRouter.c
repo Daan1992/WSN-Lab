@@ -147,6 +147,7 @@ const SimpleDescriptionFormat_t zb_SimpleDesc =
  * LOCAL FUNCTIONS
  */
 
+void sendCommand ( uint8 command);
 void uartRxCB( uint8 port, uint8 event );
 
 /*****************************************************************************
@@ -236,30 +237,10 @@ void zb_HandleKeys( uint8 shift, uint8 keys )
   {
     if ( keys & HAL_KEY_SW_1 )
     {
-      // Start reporting
-      if ( reportState == FALSE ) {
-        osal_set_event( sapi_TaskID, MY_REPORT_EVT );
-        reportState = TRUE;
-        HalLedSet( HAL_LED_2, HAL_LED_MODE_ON );
-      }
     }
     if ( keys & HAL_KEY_SW_2 )
     {
-      uint8 pData[1];
-      static uint8 reportNr = 0;
-      uint8 txOptions;
-  
-      pData[0] = DOOR_BUTTON_PRESSED;
-      if ( ++reportNr < ACK_REQ_INTERVAL && reportFailureNr == 0 )
-      {
-        txOptions = AF_TX_OPTIONS_NONE;
-      }
-      else
-      {
-        txOptions = AF_MSG_ACK_REQUEST;
-        reportNr = 0;
-      }
-      zb_SendDataRequest( 0xFFFF, ROUTER_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
+      sendCommand(DOOR_BUTTON_PRESSED);
     }
     if ( keys & HAL_KEY_SW_3 )
     {
@@ -347,12 +328,6 @@ void zb_SendDataConfirm( uint8 handle, uint8 status )
   {
     // Reset failure counter
     reportFailureNr = 0;
-    MCU_IO_DIR_OUTPUT(LED_PORT, LED_PIN);
-    MCU_IO_SET_HIGH(LED_PORT, LED_PIN);
-    for (int i = 0; i < 10000; i++)
-    {
-    }
-    MCU_IO_SET_LOW(LED_PORT, LED_PIN);
   }
 }
 
@@ -446,8 +421,48 @@ void zb_ReceiveDataIndication( uint16 source, uint16 command, uint16 len, uint8 
 {
   if (pData[len-1] == DOOR_UNLOCKED || pData[len-1] == DOOR_LOCKED) 
   {
-    MCU_IO_SET(LED_PORT, LED_PIN, pData[len-1] == DOOR_LOCKED);
+    if (pData[len-1] == DOOR_LOCKED) 
+    {
+      MCU_IO_SET_HIGH(LED_PORT, LED_PIN);
+    }
+    else
+    {
+      MCU_IO_SET_LOW(LED_PORT, LED_PIN);
+    }
   }
+  if (pData[len-1] == LAMP_BUTTON_PRESSED) 
+  {
+    sendCommand(LAMP_BUTTON_PRESSED);
+  }
+}
+
+
+/******************************************************************************
+ * @fn          sendCommand
+ *
+ * @brief       Sends a command message via Zigbee
+ *
+ * @param       command - uint8 containing the command bit
+ *
+ * @return      none
+ */
+void sendCommand ( uint8 command )
+{
+  uint8 pData[1];
+  static uint8 reportNr = 0;
+  uint8 txOptions;
+
+  pData[0] = command;
+  if ( ++reportNr < ACK_REQ_INTERVAL && reportFailureNr == 0 )
+  {
+    txOptions = AF_TX_OPTIONS_NONE;
+  }
+  else
+  {
+    txOptions = AF_MSG_ACK_REQUEST;
+    reportNr = 0;
+  }
+  zb_SendDataRequest( 0xFFFF, ROUTER_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
 }
 
 /******************************************************************************

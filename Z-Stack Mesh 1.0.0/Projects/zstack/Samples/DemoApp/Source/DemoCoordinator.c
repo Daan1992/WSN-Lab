@@ -59,6 +59,7 @@
 /******************************************************************************
  * CONSTANTS
  */
+#define ACK_REQ_INTERVAL                    5 // each 5th packet is sent with ACK request
 
 // General UART frame offsets
 #define FRAME_SOF_OFFSET                    0
@@ -119,7 +120,8 @@ static uint8 appState =             APP_INIT;
 static uint8 myStartRetryDelay =    10;          // milliseconds
 static uint8 doorOpen =             0xFF;
 static uint8 lampTriggered =        0xFF;
-static uint8 lastLockState =        0xFF;
+static bool lastLockState =         false;
+static uint8 reportFailureNr =      0;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -128,6 +130,7 @@ static uint8 lastLockState =        0xFF;
 static uint8 calcFCS(uint8 *pBuf, uint8 len);
 static void sysPingReqRcvd(void);
 static void sysPingRsp(void);
+void  sendCommand(uint8 command);
 
 /******************************************************************************
  * GLOBAL VARIABLES
@@ -158,7 +161,7 @@ const SimpleDescriptionFormat_t zb_SimpleDesc =
   NUM_IN_CMD_COLLECTOR,       //  Number of Input Commands
   (cId_t *) zb_InCmdList,     //  Input Command List
   NUM_OUT_CMD_COLLECTOR,      //  Number of Output Commands
-  (cId_t *) NULL              //  Output Command List
+  (cId_t *) zb_OutCmdList     //  Output Command List
 };
 
 /******************************************************************************
@@ -209,6 +212,9 @@ void zb_HandleOsalEvent( uint16 event )
   }
   if ( event & POLL_TIMER_EVT )
   {
+    MCU_IO_SET(PORT, LED_OUT_DIGITAL, lampTriggered);
+    
+    /*
     if (HalAdcRead(HAL_ADC_CHN_AIN0, HAL_ADC_RESOLUTION_8) > 0xFF00) 
     {  
       MCU_IO_SET(PORT, LED_OUT_DIGITAL, lampTriggered);
@@ -217,14 +223,14 @@ void zb_HandleOsalEvent( uint16 event )
     {
       MCU_IO_SET_LOW(PORT, LED_OUT_DIGITAL);
     }
-    if (MCU_IO_GET(PORT, LOCK_IN_DIGITAL) != lastLockState)
+    */
+    if ((MCU_IO_GET(PORT, LOCK_IN_DIGITAL) && !lastLockState) || (!MCU_IO_GET(PORT, LOCK_IN_DIGITAL) && lastLockState))
     {
       lastLockState = MCU_IO_GET(PORT, LOCK_IN_DIGITAL);
       uint8 pData[1];
-      static uint8 reportNr = 0;
-      uint8 txOptions;
+      uint8 txOptions = AF_MSG_ACK_REQUEST;;
       
-      if (lastLockState) 
+      if (!lastLockState) 
       {
         pData[0] = DOOR_UNLOCKED;
       }
@@ -538,4 +544,32 @@ static uint8 calcFCS(uint8 *pBuf, uint8 len)
   }
 
   return rtrn;
+}
+
+/******************************************************************************
+ * @fn          sendCommand
+ *
+ * @brief       Sends a command message via Zigbee
+ *
+ * @param       command - uint8 containing the command bit
+ *
+ * @return      none
+ */
+void sendCommand ( uint8 command )
+{
+  uint8 pData[1];
+  static uint8 reportNr = 0;
+  uint8 txOptions;
+
+  pData[0] = command;
+  if ( ++reportNr < ACK_REQ_INTERVAL && reportFailureNr == 0 )
+  {
+    txOptions = AF_TX_OPTIONS_NONE;
+  }
+  else
+  {
+    txOptions = AF_MSG_ACK_REQUEST;
+    reportNr = 0;
+  }
+  zb_SendDataRequest( 0xFFFF, COORD_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
 }

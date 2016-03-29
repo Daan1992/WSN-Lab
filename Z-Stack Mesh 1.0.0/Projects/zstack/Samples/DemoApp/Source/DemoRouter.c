@@ -175,6 +175,7 @@ void zb_HandleOsalEvent( uint16 event )
     zb_StartRequest();
     
     MCU_IO_DIR_OUTPUT(LED_PORT, LED_PIN);
+    MCU_IO_SET_LOW(LED_PORT, LED_PIN);
   }
 
   if ( event & MY_START_EVT )
@@ -429,10 +430,6 @@ void zb_ReceiveDataIndication( uint16 source, uint16 command, uint16 len, uint8 
     {
       MCU_IO_SET_LOW(LED_PORT, LED_PIN);
     }
-  }
-  if (pData[len-1] == LAMP_BUTTON_PRESSED) 
-  {
-    sendCommand(LAMP_BUTTON_PRESSED);
   }
 }
 

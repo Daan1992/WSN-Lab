@@ -80,6 +80,8 @@
 #define LAMP_BUTTON_PRESSED               0xF1
 #define DOOR_LOCKED                       0xF2
 #define DOOR_UNLOCKED                     0xF3
+#define LAMP_ON                           0xF4
+#define LAMP_OFF                          0xF5
 
 #define RX_BUF_LEN                        128
 

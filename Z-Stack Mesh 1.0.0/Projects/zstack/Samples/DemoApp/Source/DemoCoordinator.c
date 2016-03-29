@@ -104,6 +104,8 @@
 #define SYS_PING_RESPONSE                   0x0161
 #define ZB_RECEIVE_DATA_INDICATION          0x8746
 
+#define POLL_DELAY                          1000
+
 // Application States
 #define APP_INIT                            0
 #define APP_START                           2
@@ -115,13 +117,13 @@
 /******************************************************************************
  * LOCAL VARIABLES
  */
-
 static uint8 appState =             APP_INIT;
 static uint8 myStartRetryDelay =    10;          // milliseconds
 static uint8 doorOpen =             0xFF;
-static uint8 lampTriggered =        0xFF;
+static bool lampTriggered =         false;
 static bool lastLockState =         false;
 static uint8 reportFailureNr =      0;
+static uint16 ADCValue;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -200,10 +202,13 @@ void zb_HandleOsalEvent( uint16 event )
     MCU_IO_DIR_OUTPUT(PORT, LED_OUT_DIGITAL);
     MCU_IO_DIR_OUTPUT(PORT, DOOR_OUT_DIGITAL);
     MCU_IO_INPUT(PORT, LOCK_IN_DIGITAL, MCU_IO_PULLDOWN);
+    osal_start_timerEx( sapi_TaskID, POLL_TIMER_EVT, POLL_DELAY );
+    
+    zb_AllowBind( 0xFF );
+    HalLedSet( HAL_LED_2, HAL_LED_MODE_ON );
     
     // Start the device
     zb_StartRequest();
-    osal_start_reload_timer( 0xFA, POLL_TIMER_EVT, 500); 
   }
 
   if ( event & MY_START_EVT )
@@ -212,34 +217,39 @@ void zb_HandleOsalEvent( uint16 event )
   }
   if ( event & POLL_TIMER_EVT )
   {
-    MCU_IO_SET(PORT, LED_OUT_DIGITAL, lampTriggered);
-    
-    /*
-    if (HalAdcRead(HAL_ADC_CHN_AIN0, HAL_ADC_RESOLUTION_8) > 0xFF00) 
+    ADCValue = HalAdcRead(HAL_ADC_CHN_AIN0, HAL_ADC_RESOLUTION_8);
+    bool lampWasOn = MCU_IO_GET(PORT, LED_OUT_DIGITAL);
+    if (ADCValue > 110) 
     {  
       MCU_IO_SET(PORT, LED_OUT_DIGITAL, lampTriggered);
+      if (lampTriggered && !lampWasOn)
+      {
+        sendCommand(LAMP_ON);
+      }
     }
     else 
     {
       MCU_IO_SET_LOW(PORT, LED_OUT_DIGITAL);
+      if (lampWasOn)
+      {
+        sendCommand(LAMP_OFF);
+      }
     }
-    */
-    if ((MCU_IO_GET(PORT, LOCK_IN_DIGITAL) && !lastLockState) || (!MCU_IO_GET(PORT, LOCK_IN_DIGITAL) && lastLockState))
+    
+    if (MCU_IO_GET(PORT, LOCK_IN_DIGITAL) != lastLockState)
     {
       lastLockState = MCU_IO_GET(PORT, LOCK_IN_DIGITAL);
-      uint8 pData[1];
-      uint8 txOptions = AF_MSG_ACK_REQUEST;;
       
       if (!lastLockState) 
       {
-        pData[0] = DOOR_UNLOCKED;
+        sendCommand(DOOR_LOCKED);
       }
       else
       {
-        pData[0] = DOOR_LOCKED;
+        sendCommand(DOOR_UNLOCKED);
       }
-      zb_SendDataRequest( 0xFFFF, COORD_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
     }
+    osal_start_timerEx( sapi_TaskID, POLL_TIMER_EVT, POLL_DELAY );
   }
 }
 
@@ -259,7 +269,6 @@ void zb_HandleOsalEvent( uint16 event )
  */
 void zb_HandleKeys( uint8 shift, uint8 keys )
 {
-  static uint8 allowBind = FALSE;
 
   // Shift is used to make each button/switch dual purpose.
   if ( shift )
@@ -281,22 +290,6 @@ void zb_HandleKeys( uint8 shift, uint8 keys )
   {
     if ( keys & HAL_KEY_SW_1 )
     {
-      if ( appState == APP_START )
-      {
-        allowBind ^= 1;
-        if ( allowBind )
-        {
-          // Turn ON Allow Bind mode infinitly
-          zb_AllowBind( 0xFF );
-          HalLedSet( HAL_LED_2, HAL_LED_MODE_ON );
-        }
-        else
-        {
-          // Turn OFF Allow Bind mode infinitly
-          zb_AllowBind( 0x00 );
-          HalLedSet( HAL_LED_2, HAL_LED_MODE_OFF );
-        }
-      }
     }
     if ( keys & HAL_KEY_SW_2 )
     {
@@ -353,8 +346,8 @@ void zb_StartConfirm( uint8 status )
  */
 void zb_SendDataConfirm( uint8 handle, uint8 status )
 {
-  (void)handle;
-  (void)status;
+   (void) handle;
+   (void) status;
 }
 
 /******************************************************************************
@@ -557,6 +550,7 @@ static uint8 calcFCS(uint8 *pBuf, uint8 len)
  */
 void sendCommand ( uint8 command )
 {
+  HalLedSet( HAL_LED_1, HAL_LED_MODE_OFF );
   uint8 pData[1];
   static uint8 reportNr = 0;
   uint8 txOptions;
@@ -572,4 +566,5 @@ void sendCommand ( uint8 command )
     reportNr = 0;
   }
   zb_SendDataRequest( 0xFFFF, COORD_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
+  HalLedSet( HAL_LED_1, HAL_LED_MODE_ON );
 }

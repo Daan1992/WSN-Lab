@@ -113,7 +113,7 @@ static uint16 parentShortAddr;
 
 // Inputs and Outputs for Sensor device
 #define NUM_OUT_CMD        1
-#define NUM_IN_CMD         2
+#define NUM_IN_CMD         1
 
 // List of output and input commands for Sensor device
 const cId_t zb_OutCmdList[NUM_OUT_CMD] =
@@ -123,8 +123,7 @@ const cId_t zb_OutCmdList[NUM_OUT_CMD] =
 
 const cId_t zb_InCmdList[NUM_IN_CMD] =
 {
-  BUTTON_REPORT_CMD_ID,
-   COORD_REPORT_CMD_ID,
+   COORD_ROUTER_CMD_ID,
 };
 
 // Define SimpleDescriptor for Sensor device
@@ -459,7 +458,7 @@ void sendCommand ( uint8 command )
     txOptions = AF_MSG_ACK_REQUEST;
     reportNr = 0;
   }
-  zb_SendDataRequest( 0xFFFF, ROUTER_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
+  zb_SendDataRequest( 0xFFFE, ROUTER_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
 }
 
 /******************************************************************************

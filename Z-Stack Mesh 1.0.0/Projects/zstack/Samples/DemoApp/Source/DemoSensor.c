@@ -115,12 +115,17 @@ uint16 timeSinceLastSent = 60000;
 
 // Inputs and Outputs for Sensor device
 #define NUM_OUT_CMD_SENSOR                1
-#define NUM_IN_CMD_SENSOR                 0
+#define NUM_IN_CMD_SENSOR                 1
 
 // List of output and input commands for Sensor device
 const cId_t zb_OutCmdList[NUM_OUT_CMD_SENSOR] =
 {
   BUTTON_REPORT_CMD_ID
+};
+
+const cId_t zb_InCmdList[NUM_IN_CMD_SENSOR] =
+{
+  COORD_BUTTON_CMD_ID
 };
 
 // Define SimpleDescriptor for Sensor device
@@ -132,7 +137,7 @@ const SimpleDescriptionFormat_t zb_SimpleDesc =
   DEVICE_VERSION_SENSOR,      //  Device Version
   0,                          //  Reserved
   NUM_IN_CMD_SENSOR,          //  Number of Input Commands
-  (cId_t *) NULL,             //  Input Command List
+  (cId_t *) zb_InCmdList,     //  Input Command List
   NUM_OUT_CMD_SENSOR,         //  Number of Output Commands
   (cId_t *) zb_OutCmdList     //  Output Command List
 };
@@ -233,6 +238,7 @@ void zb_HandleKeys( uint8 shift, uint8 keys )
     }
     if ( keys & HAL_KEY_SW_2 )
     {
+      MCU_IO_SET_LOW(LED_PORT, LED_PIN);
       sendCommand(LAMP_BUTTON_PRESSED);
     }
     if ( keys & HAL_KEY_SW_3 )
@@ -270,6 +276,9 @@ void zb_StartConfirm( uint8 status )
     // Store parent short address
     zb_GetDeviceInfo(ZB_INFO_PARENT_SHORT_ADDR, &parentShortAddr);
 
+    // Turn ON Allow Bind mode infinitly
+    zb_AllowBind( 0xFF );
+    
     // Set event to bind to a collector
     osal_set_event( sapi_TaskID, MY_FIND_COLLECTOR_EVT );
   }
@@ -439,5 +448,5 @@ void sendCommand ( uint8 command )
     txOptions = AF_MSG_ACK_REQUEST;
     reportNr = 0;
   }
-  zb_SendDataRequest( 0xFFFF, BUTTON_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
+  zb_SendDataRequest( 0xFFFE, BUTTON_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
 }

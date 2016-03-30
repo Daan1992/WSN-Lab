@@ -67,7 +67,8 @@
 // Define the Command ID's used in this application
 #define BUTTON_REPORT_CMD_ID              2
 #define ROUTER_REPORT_CMD_ID              3
-#define COORD_REPORT_CMD_ID               4
+#define COORD_ROUTER_CMD_ID               4
+#define COORD_BUTTON_CMD_ID               5
 
 // Sensor report data format
 #define SENSOR_TEMP_OFFSET                0

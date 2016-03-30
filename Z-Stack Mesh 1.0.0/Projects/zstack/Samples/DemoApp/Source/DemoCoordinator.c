@@ -124,6 +124,8 @@ static bool lampTriggered =         false;
 static bool lastLockState =         false;
 static uint8 reportFailureNr =      0;
 static uint16 ADCValue;
+static bool routerBound =           false;
+static bool buttonBound =           false;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -132,24 +134,26 @@ static uint16 ADCValue;
 static uint8 calcFCS(uint8 *pBuf, uint8 len);
 static void sysPingReqRcvd(void);
 static void sysPingRsp(void);
-void  sendCommand(uint8 command);
+void  sendCommand(uint8 command, uint16 targetCommand);
 
 /******************************************************************************
  * GLOBAL VARIABLES
  */
 
 // Inputs and Outputs for Collector device
-#define NUM_OUT_CMD_COLLECTOR           1
-#define NUM_IN_CMD_COLLECTOR            1
+#define NUM_OUT_CMD_COLLECTOR           2
+#define NUM_IN_CMD_COLLECTOR            2
 
 // List of output and input commands for Collector device
 const cId_t zb_OutCmdList[NUM_OUT_CMD_COLLECTOR] =
 {
-  COORD_REPORT_CMD_ID,
+  COORD_BUTTON_CMD_ID,
+  COORD_ROUTER_CMD_ID
 };
 const cId_t zb_InCmdList[NUM_IN_CMD_COLLECTOR] =
 {
   ROUTER_REPORT_CMD_ID,
+  BUTTON_REPORT_CMD_ID
 };
 
 // Define SimpleDescriptor for Collector device
@@ -194,6 +198,7 @@ void zb_HandleOsalEvent( uint16 event )
     // blind LED 1 to indicate starting/joining a network
     HalLedBlink ( HAL_LED_1, 0, 50, 500 );
     HalLedSet( HAL_LED_2, HAL_LED_MODE_OFF );
+    HalLedSet( HAL_LED_3, HAL_LED_MODE_OFF );
 
     //Initiate ADC
     HalAdcInit();
@@ -205,7 +210,6 @@ void zb_HandleOsalEvent( uint16 event )
     osal_start_timerEx( sapi_TaskID, POLL_TIMER_EVT, POLL_DELAY );
     
     zb_AllowBind( 0xFF );
-    HalLedSet( HAL_LED_2, HAL_LED_MODE_ON );
     
     // Start the device
     zb_StartRequest();
@@ -224,7 +228,7 @@ void zb_HandleOsalEvent( uint16 event )
       MCU_IO_SET(PORT, LED_OUT_DIGITAL, lampTriggered);
       if (lampTriggered && !lampWasOn)
       {
-        sendCommand(LAMP_ON);
+        sendCommand(LAMP_ON, COORD_BUTTON_CMD_ID);
       }
     }
     else 
@@ -232,7 +236,7 @@ void zb_HandleOsalEvent( uint16 event )
       MCU_IO_SET_LOW(PORT, LED_OUT_DIGITAL);
       if (lampWasOn)
       {
-        sendCommand(LAMP_OFF);
+        sendCommand(LAMP_OFF, COORD_BUTTON_CMD_ID);
       }
     }
     
@@ -242,13 +246,23 @@ void zb_HandleOsalEvent( uint16 event )
       
       if (!lastLockState) 
       {
-        sendCommand(DOOR_LOCKED);
+        sendCommand(DOOR_LOCKED, COORD_ROUTER_CMD_ID);
       }
       else
       {
-        sendCommand(DOOR_UNLOCKED);
+        sendCommand(DOOR_UNLOCKED, COORD_ROUTER_CMD_ID);
       }
     }
+    
+    if (!routerBound)
+    {
+      zb_BindDevice( TRUE, COORD_ROUTER_CMD_ID, (uint8 *)NULL );
+    }
+    if (!buttonBound)
+    {
+      zb_BindDevice( TRUE, COORD_BUTTON_CMD_ID, (uint8 *)NULL );
+    }
+    
     osal_start_timerEx( sapi_TaskID, POLL_TIMER_EVT, POLL_DELAY );
   }
 }
@@ -364,8 +378,19 @@ void zb_SendDataConfirm( uint8 handle, uint8 status )
 void zb_BindConfirm( uint16 commandId, uint8 status )
 {
   (void)commandId;
-  (void)status;
-}
+  if (status == ZSUCCESS)
+  {
+    if (commandId == COORD_ROUTER_CMD_ID)
+    {
+      routerBound= true;
+    }
+    if (commandId == COORD_BUTTON_CMD_ID)
+    {
+      buttonBound = true;
+      HalLedSet( HAL_LED_2, HAL_LED_MODE_ON );
+    }
+  }
+ }
 
 /******************************************************************************
  * @fn          zb_AllowBindConfirm
@@ -548,7 +573,7 @@ static uint8 calcFCS(uint8 *pBuf, uint8 len)
  *
  * @return      none
  */
-void sendCommand ( uint8 command )
+void sendCommand ( uint8 command, uint16 targetCluster )
 {
   HalLedSet( HAL_LED_1, HAL_LED_MODE_OFF );
   uint8 pData[1];
@@ -565,6 +590,7 @@ void sendCommand ( uint8 command )
     txOptions = AF_MSG_ACK_REQUEST;
     reportNr = 0;
   }
-  zb_SendDataRequest( 0xFFFF, COORD_REPORT_CMD_ID, 1, pData, 0, txOptions, 0 );
+  zb_SendDataRequest( 0xFFFE, targetCluster, 1, pData, 0, txOptions, 0 );
   HalLedSet( HAL_LED_1, HAL_LED_MODE_ON );
 }
+
